@@ -1,0 +1,125 @@
+//======================================================================
+// REPOSITORIES
+//======================================================================
+
+buildscript {
+    repositories {
+        mavenLocal()
+        mavenCentral()
+        maven { url "http://oss.jfrog.org/repo" }
+    }
+    dependencies {
+        classpath 'io.ratpack:ratpack-gradle:0.9.5'
+    }
+}
+
+repositories {
+    mavenLocal()
+    mavenCentral()
+    maven { url "http://repo.spring.io/libs-release" }
+    maven { url "http://oss.jfrog.org/repo" }
+    maven { url "http://repo.springsource.org/repo" }
+}
+
+//======================================================================
+// PLUGINS
+//======================================================================
+
+apply plugin: "ratpack-groovy"
+apply plugin: "groovy"
+apply plugin: "idea"
+apply plugin: "maven"
+
+//======================================================================
+// PROJECT
+//======================================================================
+
+version = '1.0-SNAPSHOT'
+group = 'com.sony.ebs.octopus3'
+
+ext.archivesBaseName = 'octopus3-repository-service'
+ext.isSnapshot = version.endsWith("-SNAPSHOT")
+
+//======================================================================
+// CONFIGURATIONS
+//======================================================================
+
+ext.javaLanguageLevel = 1.7
+
+sourceCompatibility = "$javaLanguageLevel"
+targetCompatibility = "$javaLanguageLevel"
+defaultTasks 'clean', 'build'
+
+idea {
+    project {
+        jdkName "$javaLanguageLevel"
+        languageLevel "$javaLanguageLevel"
+    }
+}
+
+configurations {
+    cucumberRuntime {
+        extendsFrom testRuntime
+    }
+}
+
+sourceSets {
+    main {
+        groovy {
+            srcDirs = ['src/main/groovy']
+        }
+    }
+
+    test {
+        groovy {
+            srcDirs = ['src/test/groovy']
+        }
+    }
+}
+
+//======================================================================
+// DEPENDENCIES
+//======================================================================
+
+dependencies {
+    compile "org.springframework:spring-core:4.0.5.RELEASE"
+    compile "org.springframework:spring-context:4.0.5.RELEASE"
+    compile "org.springframework:spring-beans:4.0.5.RELEASE"
+    compile 'io.ratpack:ratpack-rx:0.9.5'
+    compile 'io.ratpack:ratpack-jackson:0.9.5'
+    compile "org.slf4j:slf4j-api:1.7.5"
+    compile "org.slf4j:slf4j-log4j12:1.7.5"
+
+    springloaded "org.springsource.springloaded:springloaded-core:1.1.4"
+
+    testCompile "org.spockframework:spock-core:0.7-groovy-2.0", {
+        exclude module: "groovy-all"
+    }
+    testCompile 'junit:junit:4.11'
+    testCompile 'info.cukes:cucumber-junit:1.1.7'
+    testCompile 'info.cukes:cucumber-groovy:1.1.7'
+
+    /*
+    In order to work around a really flagrant bug ( http://issues.gradle.org/browse/GRADLE-732 )
+    You have to create a configuration that includes the jar.archivePath (the jar.archivePath is created by the java plugin)
+    and give it the same name as the cucumberRuntime configuration, or name it something different and have the cucumberRuntime
+    configuration extend from it as well. VERY ANNOYING BUG!
+    */
+    cucumberRuntime files("${jar.archivePath}")
+}
+
+//======================================================================
+// TASKS
+//======================================================================
+
+task cucumber() {
+    dependsOn assemble
+    doLast {
+        javaexec {
+            main = "cucumber.api.cli.Main"
+            classpath = files(configurations.cucumberRuntime, sourceSets.test.runtimeClasspath)
+            args = ['-f', 'pretty', '--glue', 'src/test/groovy', 'src/test/resources/cukes']
+
+        }
+    }
+}
