@@ -1,7 +1,6 @@
 package com.sony.ebs.octopus3.microservices.reposervice.business
 
-import com.sony.ebs.octopus3.microservices.reposervice.business.util.SplunkLog
-import com.sony.ebs.octopus3.microservices.reposervice.business.util.UrnUtils
+import com.sony.ebs.octopus3.commons.urn.URN
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import ratpack.launch.LaunchConfig
@@ -19,10 +18,8 @@ import java.text.SimpleDateFormat
 @Component
 class DeltaService {
 
-    @Value('${octopus3.reposervice.storageFolder}')
-    def basePath
-
-    final static def DATE_FORMAT = "dd/MM/yyyy'T'HH:mm'Z'"
+    @Value('${storage.root}')
+    String basePath
 
     LaunchConfig launchConfig
 
@@ -33,10 +30,9 @@ class DeltaService {
      * @param deltaDate (optional)
      * @return contents of files
      */
-    def delta(urn, deltaDate) {
-        SplunkLog.logService(this.class.name, Thread.currentThread().stackTrace[10].methodName, [urn, deltaDate], "Starting Delta")
+    def delta(URN urn, deltaDate) {
         try {
-            def result = Files.newDirectoryStream(Paths.get(basePath + UrnUtils.decompose(urn)), new DirectoryStream.Filter<Path>() {
+            def result = Files.newDirectoryStream(Paths.get(new URI(basePath + urn.toPath())), new DirectoryStream.Filter<Path>() {
                 @Override
                 boolean accept(Path path) throws IOException {
                     //if deltaDate is null, accept all the files;
@@ -46,7 +42,6 @@ class DeltaService {
             }).collect { path ->
                 UrnUtils.compose(basePath, path)
             }.flatten()
-            SplunkLog.logService(this.class.name, Thread.currentThread().stackTrace[10].methodName, [urn], "Delta returns result: ${result}")
             result
         } catch (IOException e) {
             e.printStackTrace();

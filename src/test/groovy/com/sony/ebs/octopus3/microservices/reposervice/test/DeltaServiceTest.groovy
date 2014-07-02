@@ -3,6 +3,7 @@ package com.sony.ebs.octopus3.microservices.reposervice.test
 import com.sony.ebs.octopus3.microservices.reposervice.business.DeltaService
 import com.sony.ebs.octopus3.microservices.reposervice.business.RepoService
 import org.junit.After
+import org.junit.AfterClass
 import org.junit.Before
 import org.junit.Test
 
@@ -13,6 +14,7 @@ import org.junit.Test
 class DeltaServiceTest {
 
     final def TEST_FOLDER_PATH = "tmp"
+
     RepoService repoService
     DeltaService deltaService
 
@@ -51,7 +53,7 @@ class DeltaServiceTest {
     }
 
 
-    @After
+    @AfterClass
     void tearDown() {
         new File(TEST_FOLDER_PATH).delete()
     }

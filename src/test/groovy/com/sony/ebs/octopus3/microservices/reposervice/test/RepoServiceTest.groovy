@@ -1,45 +1,82 @@
 package com.sony.ebs.octopus3.microservices.reposervice.test
 
+import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.business.RepoService
+import org.apache.commons.lang.SystemUtils
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-import java.nio.file.Paths
+import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertTrue
 
 class RepoServiceTest {
 
-    final def TEST_FOLDER_PATH = "tmp"
-    final def SEPARATOR = File.separator
+    final def static TEST_FOLDER_PATH = "tmp"
 
     RepoService repoService
 
     @Before
     void before() {
         repoService = new RepoService(basePath: TEST_FOLDER_PATH)
-        new File(TEST_FOLDER_PATH).delete()
+    }
 
-        repoService.write("urn:flix_sku:global:en_gb:xel1bu", "deneme")
-        repoService.write("urn:flix_sku:global:en_gb:xel1baep", "deneme2")
-        repoService.write("urn:flix_sku:global:fr_fr:xel1bu", "deneme3")
-        repoService.write("urn:flix_sku:global:fr_fr:xel1baep", "deneme4")
+    @Test
+    void writeRegularFile() {
+        def urn = new URNImpl("urn:flix_sku:global:en_gb:xel1bu")
+        repoService.write(urn, "content")
+        assertFile "/flix_sku/global/en_gb/xel1bu", "content"
+    }
+
+    @Test
+    void writeRegularFileWithExtension() {
+        def urn = new URNImpl("urn:flix_sku:global:en_gb:xel1bu.json")
+        repoService.write(urn, "content")
+        assertFile "/flix_sku/global/en_gb/xel1bu.json", "content"
     }
 
     @Test
     void shouldReadRepoWithUrn() {
-        assert repoService.read("urn:flix_sku:global:en_gb:xel1bu") == Paths.get("${TEST_FOLDER_PATH}${SEPARATOR}flix_sku${SEPARATOR}global${SEPARATOR}en_gb${SEPARATOR}xel1bu")
-        assert repoService.read("urn:flix_sku:global:en_gb:xel1baep") == Paths.get("${TEST_FOLDER_PATH}${SEPARATOR}flix_sku${SEPARATOR}global${SEPARATOR}en_gb${SEPARATOR}xel1baep")
-        assert repoService.read("urn:flix_sku:global:fr_fr:xel1bu") == Paths.get("${TEST_FOLDER_PATH}${SEPARATOR}flix_sku${SEPARATOR}global${SEPARATOR}fr_fr${SEPARATOR}xel1bu")
-        assert repoService.read("urn:flix_sku:global:fr_fr:xel1baep") == Paths.get("${TEST_FOLDER_PATH}${SEPARATOR}flix_sku${SEPARATOR}global${SEPARATOR}fr_fr${SEPARATOR}xel1baep")
+        createFile "/flix_sku/global/en_gb/xel1bu", "content"
+        assertEquals "content", repoService.read(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"))
     }
 
     @Test(expected = FileNotFoundException.class)
     void shouldGivErrorIfNoSku() {
-        repoService.read("urn:flix_sku:global:fr_fr:kdl200aq")
+        repoService.read(new URNImpl("urn:flix_sku:global:fr_fr:kdl200aq"))
     }
 
     @After
     void tearDown() {
-        new File(TEST_FOLDER_PATH).delete()
+        new File(TEST_FOLDER_PATH).deleteDir()
     }
+
+    //====================================
+    // HELPER METHODS
+    //====================================
+
+    static {
+        String.metaClass.path { ->
+            if (SystemUtils.IS_OS_WINDOWS) {
+                def sb = new StringBuffer()
+                delegate.each { sb << (it == "/" ? "\\" : "/") }
+                sb.toString()
+            }
+            else
+                delegate
+        }
+    }
+
+    static void assertFile(relativePath, content) {
+        def file = new File("$TEST_FOLDER_PATH${File.separator}${relativePath.path()}")
+        assertTrue "File does not exists in ${file.absolutePath}", file.exists()
+        assertEquals "The content of file [${file.text}] is wrong", content, file.text
+    }
+
+    static void createFile(relativePath, content) {
+        def file = new File("$TEST_FOLDER_PATH${File.separator}${relativePath.path()}")
+        file.parentFile.mkdirs()
+        file << content
+    }
+
 }

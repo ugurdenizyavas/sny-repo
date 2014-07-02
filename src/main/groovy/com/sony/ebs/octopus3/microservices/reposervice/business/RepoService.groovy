@@ -1,7 +1,6 @@
 package com.sony.ebs.octopus3.microservices.reposervice.business
 
-import com.sony.ebs.octopus3.microservices.reposervice.business.util.SplunkLog
-import com.sony.ebs.octopus3.microservices.reposervice.business.util.UrnUtils
+import com.sony.ebs.octopus3.commons.urn.URN
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 import ratpack.launch.LaunchConfig
@@ -17,8 +16,8 @@ import java.nio.file.Paths
 @Component
 class RepoService {
 
-    @Value('${octopus3.reposervice.storageFolder}')
-    def basePath
+    @Value('${storage.root}')
+    String basePath
 
     LaunchConfig launchConfig
 
@@ -29,14 +28,12 @@ class RepoService {
      * @param content any format is possible (mandatory)
      * @return path of the file
      */
-    Path write(urn, file) {
-        SplunkLog.logService(this.class.name, Thread.currentThread().stackTrace[10].methodName, [urn, file], "Starting to write")
+    Path write(URN urn, file) {
         try {
-            def path = Paths.get(basePath + UrnUtils.decompose(urn).toString())
+            def path = Paths.get(basePath + urn.toPath())
             Files.deleteIfExists(path)
             Files.createDirectories(path.parent)
             def result = path << file
-            SplunkLog.logService(this.class.name, Thread.currentThread().stackTrace[10].methodName, [urn, file], "Result is : ${result}")
             result
         } catch (all) {
             throw all
@@ -50,15 +47,12 @@ class RepoService {
      * @param urn (eg. urn:flix_sku:global:en_gb:xel1bu) (mandatory)
      * @return content of the file
      */
-    def read(urn) {
-        SplunkLog.logService(this.class.name, Thread.currentThread().stackTrace[10].methodName, [urn], "Starting to read")
-        def path = Paths.get(basePath + UrnUtils.decompose(urn))
+    def read(URN urn) {
+        def path = Paths.get(basePath + urn.toPath())
         if (Files.notExists(path)) {
-            SplunkLog.logService(this.class.name, Thread.currentThread().stackTrace[10].methodName, [urn], "File not found in path : ${path}")
             throw new FileNotFoundException("File in path ${path} not found")
         } else {
-            SplunkLog.logService(this.class.name, Thread.currentThread().stackTrace[10].methodName, [urn], "Result is : ${path}")
-            path
+            new File(path.toFile().absolutePath).text
         }
     }
 

@@ -1,20 +1,30 @@
 //======================================================================
+// PROJECT
+//======================================================================
+
+version = '1.0-SNAPSHOT'
+group = 'com.sony.ebs.octopus3'
+
+//======================================================================
 // REPOSITORIES
 //======================================================================
 
 buildscript {
     repositories {
         mavenLocal()
+        maven { url "https://mvn.sony-europe.com/content/groups/global" }
         mavenCentral()
         maven { url "http://oss.jfrog.org/repo" }
     }
     dependencies {
-        classpath 'io.ratpack:ratpack-gradle:0.9.5'
+        classpath "io.ratpack:ratpack-gradle:0.9.5"
+        classpath "org.gradle.api.plugins:gradle-nexus-plugin:0.7"
     }
 }
 
 repositories {
     mavenLocal()
+    maven { url "https://mvn.sony-europe.com/content/groups/global" }
     mavenCentral()
     maven { url "http://repo.spring.io/libs-release" }
     maven { url "http://oss.jfrog.org/repo" }
@@ -28,17 +38,7 @@ repositories {
 apply plugin: "ratpack-groovy"
 apply plugin: "groovy"
 apply plugin: "idea"
-apply plugin: "maven"
-
-//======================================================================
-// PROJECT
-//======================================================================
-
-version = '1.0-SNAPSHOT'
-group = 'com.sony.ebs.octopus3'
-
-ext.archivesBaseName = 'octopus3-repository-service'
-ext.isSnapshot = version.endsWith("-SNAPSHOT")
+apply plugin: "nexus"
 
 //======================================================================
 // CONFIGURATIONS
@@ -50,30 +50,22 @@ sourceCompatibility = "$javaLanguageLevel"
 targetCompatibility = "$javaLanguageLevel"
 defaultTasks 'clean', 'build'
 
-idea {
-    project {
-        jdkName "$javaLanguageLevel"
-        languageLevel "$javaLanguageLevel"
-    }
-}
-
 configurations {
     cucumberRuntime {
         extendsFrom testRuntime
     }
 }
 
-sourceSets {
-    main {
-        groovy {
-            srcDirs = ['src/main/groovy']
-        }
+idea {
+    project {
+        jdkName "1.7"
+        languageLevel "1.7"
     }
+    module {
+        inheritOutputDirs = false
+        outputDir = compileGroovy.destinationDir
+        testOutputDir = compileTestGroovy.destinationDir
 
-    test {
-        groovy {
-            srcDirs = ['src/test/groovy']
-        }
     }
 }
 
@@ -85,10 +77,11 @@ dependencies {
     compile "org.springframework:spring-core:4.0.5.RELEASE"
     compile "org.springframework:spring-context:4.0.5.RELEASE"
     compile "org.springframework:spring-beans:4.0.5.RELEASE"
-    compile 'io.ratpack:ratpack-rx:0.9.5'
-    compile 'io.ratpack:ratpack-jackson:0.9.5'
+    compile "io.ratpack:ratpack-rx:0.9.5"
+    compile "io.ratpack:ratpack-jackson:0.9.5"
     compile "org.slf4j:slf4j-api:1.7.5"
     compile "org.slf4j:slf4j-log4j12:1.7.5"
+    compile "com.sony.ebs.octopus3:octopus3-commons:1.0-SNAPSHOT"
 
     springloaded "org.springsource.springloaded:springloaded-core:1.1.4"
 
@@ -122,4 +115,17 @@ task cucumber() {
 
         }
     }
+}
+
+//======================================================================
+// DEPLOY ARTIFACTS
+//======================================================================
+
+nexus {
+    attachSources = true
+    attachTests = false
+    attachJavadoc = false
+    sign = false
+    repositoryUrl = "https://mvn.sony-europe.com/content/repositories/releases"
+    snapshotRepositoryUrl = "https://mvn.sony-europe.com/content/repositories/snapshots"
 }

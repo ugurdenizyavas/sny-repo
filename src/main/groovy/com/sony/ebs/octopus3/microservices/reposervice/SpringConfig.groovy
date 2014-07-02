@@ -12,7 +12,7 @@ import ratpack.launch.LaunchConfig
 
 @Configuration
 @ComponentScan(value = "com.sony.ebs.octopus3.microservices.reposervice")
-@PropertySource(['classpath:/default.properties', 'classpath:/${ENV}.properties'])
+@PropertySource(ignoreResourceNotFound = true, value = ['classpath:/default.properties', 'classpath:/${environment}.properties'])
 class SpringConfig {
 
     @Bean

@@ -1,9 +1,8 @@
+import com.sony.ebs.octopus3.commons.process.ProcessIdImpl
+import com.sony.ebs.octopus3.commons.urn.URNImpl
+import com.sony.ebs.octopus3.microservices.reposervice.SpringConfig
 import com.sony.ebs.octopus3.microservices.reposervice.business.DeltaService
 import com.sony.ebs.octopus3.microservices.reposervice.business.RepoService
-import com.sony.ebs.octopus3.microservices.reposervice.SpringConfig
-import com.sony.ebs.octopus3.microservices.reposervice.business.util.SplunkLog
-import com.sony.ebs.octopus3.microservices.reposervice.business.util.ProcessIdUtil
-import com.sony.ebs.octopus3.microservices.reposervice.business.validation.Validation
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -19,8 +18,8 @@ import rx.Subscriber
 import java.nio.file.Path
 
 import static ratpack.groovy.Groovy.ratpack
-import static ratpack.rx.RxRatpack.observe
 import static ratpack.jackson.Jackson.json
+import static ratpack.rx.RxRatpack.observe
 
 Logger log = LoggerFactory.getLogger("ratpack");
 
@@ -28,8 +27,6 @@ ratpack {
 
     RepoService repoService
     DeltaService deltaService
-
-    def SERVICE_NAME = "RepoService"
 
     bindings {
         add new JacksonModule()
@@ -54,66 +51,52 @@ ratpack {
 
     handlers {
         get("repository") {
-            SplunkLog.logRatpack(null, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.STARTED, null)
             def result = "Welcome to Repo Service"
-            SplunkLog.logRatpack(null, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.DONE, result)
             render result
         }
 
         //Repo Service
         post("repository/file/write/:urn") {
             Form form = parse(Form)
-            def urn = pathTokens['urn']
+            def urnStr = pathTokens.urn
             def file = form.file("file").getBytes()
-            def processId = context.request.queryParams['processId']
-            processId = ProcessIdUtil.generateId(processId)
+            def processIdStr = context.request.queryParams.processId
 
-            SplunkLog.logRatpack(processId, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.STARTED, null)
+            def urn = new URNImpl(urnStr)
+            def processId = new ProcessIdImpl(processIdStr)
 
-            if (Validation.validateUrn(urn) && file) {
+            if (file) {
                 observe(
                         blocking {
-                            SplunkLog.logRatpack(processId, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.PROCESSING, null)
                             repoService.write urn, file
                         }
                 ) subscribe {
-                    SplunkLog.logRatpack(processId, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.DONE, null)
                     render "accepted"
                 }
             } else {
-                SplunkLog.logRatpack(processId, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.REJECTED, null)
                 context.response.status(400)
                 render "rejected"
             }
         }
 
         get("repository/file/read/:urn") {
-            def urn = pathTokens['urn']
-            SplunkLog.logRatpack(null, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.STARTED, null)
+            def urn = pathTokens.urn
 
-            if (Validation.validateUrn(urn)) {
-                observe(
-                        blocking {
-                            SplunkLog.logRatpack(null, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.PROCESSING, null)
-                            repoService.read(urn)
-                        }
-                ).subscribe(([
-                        onCompleted: {
-                        },
-                        onNext     : { Path result ->
-                            SplunkLog.logRatpack(null, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.DONE, result)
-                            response.sendFile(context, result)
-                        },
-                        onError    : { Exception e ->
-                            context.response.status(404)
-                            render json([code: 404, message: e.message])
-                        }
-                ] as Subscriber<Path>))
-            } else {
-                SplunkLog.logRatpack(null, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.REJECTED, null)
-                context.response.status(400)
-                render "rejected"
-            }
+            observe(
+                    blocking {
+                        repoService.read(urn)
+                    }
+            ).subscribe(([
+                    onCompleted: {
+                    },
+                    onNext : { Path result ->
+                        response.sendFile(context, result)
+                    },
+                    onError : { Exception e ->
+                        context.response.status(404)
+                        render json([code: 404, message: e.message])
+                    }
+            ] as Subscriber<Path>))
         }
 
         //Delta Service
@@ -121,12 +104,9 @@ ratpack {
             def urn = pathTokens['urn']
             def deltaDate = context.request.queryParams['deltaDate']
 
-            SplunkLog.logRatpack(null, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.STARTED, null)
-
             if (Validation.validateUrn(urn) && (!deltaDate || Validation.validateDate(deltaDate))) {
                 observe(
                         promise { Fulfiller fulfiller ->
-                            SplunkLog.logRatpack(null, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.PROCESSING, null)
                             Thread.start {
                                 fulfiller.success(
                                         deltaService.delta(urn, deltaDate)
@@ -134,12 +114,10 @@ ratpack {
                             }
                         }
                 ) subscribe { result ->
-                    SplunkLog.logRatpack(null, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.DONE, result)
                     render json(result)
                 }
 
             } else {
-                SplunkLog.logRatpack(null, SERVICE_NAME, context.request.uri, SplunkLog.ProcessStatus.REJECTED, result)
                 context.response.status(400)
                 render "rejected"
             }
