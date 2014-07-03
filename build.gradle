@@ -126,6 +126,10 @@ task cucumber() {
     }
 }
 
+task wrapper(type: Wrapper) {
+    gradleVersion = 1.12
+}
+
 //======================================================================
 // DEPLOY ARTIFACTS
 //======================================================================
@@ -133,7 +137,7 @@ task cucumber() {
 nexus {
     attachSources = true
     attachTests = false
-    attachJavadoc = false
+    attachJavadoc = true
     sign = false
     repositoryUrl = "https://mvn.sony-europe.com/content/repositories/releases"
     snapshotRepositoryUrl = "https://mvn.sony-europe.com/content/repositories/snapshots"
