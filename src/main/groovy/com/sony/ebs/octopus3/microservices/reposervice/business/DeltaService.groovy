@@ -2,6 +2,7 @@ package com.sony.ebs.octopus3.microservices.reposervice.business
 
 import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.urn.URN
+import org.joda.time.DateTime
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
@@ -33,7 +34,7 @@ class DeltaService {
             def result = Files.newDirectoryStream(Paths.get(basePath + urn.toPath()), [
                     accept: { Path path ->
                         def startDate = sdate ? ISODateUtils.toISODate(sdate).millis : ISODateUtils.toISODate("1970-01-01T00:00:00.000Z").millis
-                        def endDate = edate ? ISODateUtils.toISODate(edate).millis : new Date().time //TODO: Change to iso date
+                        def endDate = edate ? ISODateUtils.toISODate(edate).millis : DateTime.now().millis
 
                         def lastModified = path.toFile().lastModified()
                         lastModified > startDate && lastModified < endDate
@@ -52,7 +53,8 @@ class DeltaService {
     /**
      * Converts filePath to urn
      *
-     * @param path ( eg. " / flix_sku / global / en_gb / xel1bu " ) ( mandatory )
+     * @param basePath ( eg. " ${REPO_FOLDER}
+     * @param path ( eg. " ${REPO_FOLDER}/ flix_sku / global / en_gb / xel1bu " ) ( mandatory )
      * @return urn (eg. urn:flix_sku:global:en_gb:xel1bu)
      */
     static def compose(basePath, Path path) {
@@ -61,7 +63,6 @@ class DeltaService {
             urn = ":${path.fileName}${urn}"
             path = path.parent
         }
-        def result = "urn${urn}".toString()
-        result
+        "urn${urn}".toString()
     }
 }
