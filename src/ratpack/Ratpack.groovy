@@ -1,4 +1,5 @@
 import com.sony.ebs.octopus3.commons.process.ProcessIdImpl
+import com.sony.ebs.octopus3.commons.urn.URNCreationException
 import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.SpringConfig
 import com.sony.ebs.octopus3.microservices.reposervice.business.DeltaService
@@ -8,7 +9,6 @@ import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
 import ratpack.error.ServerErrorHandler
 import ratpack.exec.Fulfiller
-import ratpack.form.Form
 import ratpack.handling.Context
 import ratpack.jackson.Jackson
 import ratpack.jackson.JacksonModule
@@ -39,7 +39,6 @@ ratpack {
         }
         init {
             AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(SpringConfig.class);
-            SpringConfig.setLaunchConfig(ctx, launchConfig)
 
             repoService = ctx.getBean(RepoService.class)
             deltaService = ctx.getBean(DeltaService.class)
@@ -51,75 +50,116 @@ ratpack {
 
     handlers {
         get("repository") {
-            def result = "Welcome to Repo Service"
-            render result
+            render json(status: 200, message: "Welcome to Repo Service")
         }
 
         //Repo Service
-        post("repository/file/write/:urn") {
-            Form form = parse(Form)
-            def urnStr = pathTokens.urn
-            def file = form.file("file").getBytes()
-            def processIdStr = context.request.queryParams.processId
+        prefix("repository/file/:urn") {
+            handler {
+                byMethod {
+                    post() {
+                        def file = request.body.bytes
+                        def urnStr = pathTokens.urn
+                        def updateDate = request.queryParams.updateDate
+                        def processIdStr = request.queryParams.processId
 
-            def urn = new URNImpl(urnStr)
-            def processId = new ProcessIdImpl(processIdStr)
+                        try {
+                            def urn = new URNImpl(urnStr)
+                            def processId = new ProcessIdImpl(processIdStr)
 
-            if (file) {
-                observe(
-                        blocking {
-                            repoService.write urn, file
+                            if (file) {
+                                observe(
+                                        blocking {
+                                            repoService.write urn, file, updateDate
+                                        }
+                                ) subscribe {
+                                    response.status(202)
+                                    render json(status: 202, message: "accepted")
+                                }
+                            } else {
+                                response.status(400)
+                                render json(status: 400, message: "rejected")
+                            }
+                        } catch (URNCreationException e) {
+                            response.status(400)
+                            render json(status: 400, message: "rejected")
                         }
-                ) subscribe {
-                    render "accepted"
+
+                    }
+
+                    get() {
+                        def urnStr = pathTokens.urn
+
+                        try {
+                            def urn = new URNImpl(urnStr)
+
+                            observe(
+                                    blocking {
+                                        repoService.read(urn)
+                                    }
+                            ).subscribe(([
+                                    onCompleted: {
+                                    },
+                                    onNext     : { Path result ->
+                                        response.sendFile context, result
+                                    },
+                                    onError    : { Exception e ->
+                                        response.status(404)
+                                        render json([code: 404, message: e.message])
+                                    }
+                            ] as Subscriber<Path>))
+                        } catch (URNCreationException e) {
+                            response.status(400)
+                            render json(status: 400, message: "rejected")
+                        }
+                    }
+
+                    delete() {
+                        def urnStr = pathTokens.urn
+
+                        try {
+                            def urn = new URNImpl(urnStr)
+
+                            observe(
+                                    blocking {
+                                        repoService.delete urn
+                                    }
+                            ) subscribe {
+                                response.status(202)
+                                render json(status: 202, message: "accepted")
+                            }
+                        } catch (URNCreationException e) {
+                            response.status(400)
+                            render json(status: 400, message: "rejected")
+                        }
+                    }
                 }
-            } else {
-                context.response.status(400)
-                render "rejected"
             }
-        }
-
-        get("repository/file/read/:urn") {
-            def urn = pathTokens.urn
-
-            observe(
-                    blocking {
-                        repoService.read(urn)
-                    }
-            ).subscribe(([
-                    onCompleted: {
-                    },
-                    onNext : { Path result ->
-                        response.sendFile(context, result)
-                    },
-                    onError : { Exception e ->
-                        context.response.status(404)
-                        render json([code: 404, message: e.message])
-                    }
-            ] as Subscriber<Path>))
         }
 
         //Delta Service
         get("repository/delta/:urn") {
-            def urn = pathTokens['urn']
-            def deltaDate = context.request.queryParams['deltaDate']
+            def urnStr = pathTokens.urn
+            def sdate = request.queryParams.sdate
+            def edate = request.queryParams.edate
 
-            if (Validation.validateUrn(urn) && (!deltaDate || Validation.validateDate(deltaDate))) {
+            try {
+                def urn = new URNImpl(urnStr)
+
                 observe(
                         promise { Fulfiller fulfiller ->
                             Thread.start {
                                 fulfiller.success(
-                                        deltaService.delta(urn, deltaDate)
+                                        deltaService.delta(urn, sdate, edate)
                                 )
                             }
                         }
                 ) subscribe { result ->
                     render json(result)
                 }
-
-            } else {
-                context.response.status(400)
-                render "rejected"
+            } catch (URNCreationException e) {
+                response.status(400)
+                render json(status: 400, message: "rejected")
             }
         }
     }

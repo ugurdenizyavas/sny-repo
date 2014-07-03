@@ -7,6 +7,10 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
+
 import static org.junit.Assert.assertEquals
 import static org.junit.Assert.assertTrue
 
@@ -18,27 +22,28 @@ class RepoServiceTest {
 
     @Before
     void before() {
+        new File(TEST_FOLDER_PATH).delete()
         repoService = new RepoService(basePath: TEST_FOLDER_PATH)
     }
 
     @Test
     void writeRegularFile() {
         def urn = new URNImpl("urn:flix_sku:global:en_gb:xel1bu")
-        repoService.write(urn, "content")
+        repoService.write(urn, "content", null)
         assertFile "/flix_sku/global/en_gb/xel1bu", "content"
     }
 
     @Test
     void writeRegularFileWithExtension() {
         def urn = new URNImpl("urn:flix_sku:global:en_gb:xel1bu.json")
-        repoService.write(urn, "content")
+        repoService.write(urn, "content", null)
         assertFile "/flix_sku/global/en_gb/xel1bu.json", "content"
     }
 
     @Test
     void shouldReadRepoWithUrn() {
-        createFile "/flix_sku/global/en_gb/xel1bu", "content"
-        assertEquals "content", repoService.read(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"))
+        createFile "/flix_sku/global/en_gb/xel1ba", "content"
+        assertEquals "content", repoService.read(new URNImpl("urn:flix_sku:global:en_gb:xel1ba")).readLines().join()
     }
 
     @Test(expected = FileNotFoundException.class)
@@ -48,7 +53,9 @@ class RepoServiceTest {
 
     @After
     void tearDown() {
-        new File(TEST_FOLDER_PATH).deleteDir()
+        def folder = Paths.get(TEST_FOLDER_PATH + "/flix_sku/global/en_gb")
+        if (Files.exists(folder))
+            RepoService.removeRecursive(folder)
     }
 
     //====================================
@@ -61,21 +68,21 @@ class RepoServiceTest {
                 def sb = new StringBuffer()
                 delegate.each { sb << (it == "/" ? "\\" : "/") }
                 sb.toString()
-            }
-            else
+            } else
                 delegate
         }
     }
 
     static void assertFile(relativePath, content) {
-        def file = new File("$TEST_FOLDER_PATH${File.separator}${relativePath.path()}")
-        assertTrue "File does not exists in ${file.absolutePath}", file.exists()
-        assertEquals "The content of file [${file.text}] is wrong", content, file.text
+        def path = Paths.get("$TEST_FOLDER_PATH${File.separator}${relativePath}")
+        assertTrue "File does not exists in ${path.text}", Files.exists(path)
+        assertEquals "The content of file [${path.text}] is wrong", content, path.readLines().join()
     }
 
     static void createFile(relativePath, content) {
-        def file = new File("$TEST_FOLDER_PATH${File.separator}${relativePath.path()}")
-        file.parentFile.mkdirs()
+        def path = Paths.get("$TEST_FOLDER_PATH${File.separator}${relativePath}")
+        Files.createDirectories(path.parent)
+        def file = Files.createFile(path)
         file << content
     }
 
