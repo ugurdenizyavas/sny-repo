@@ -2,6 +2,7 @@ package com.sony.ebs.octopus3.microservices.reposervice.business
 
 import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.urn.URN
+import com.sony.ebs.octopus3.commons.urn.URNImpl
 import org.joda.time.DateTime
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -29,19 +30,19 @@ class DeltaService {
      * @param edate End date to for the time interval. (optional, default: now)
      * @return urns of result files
      */
-    def delta(URN urn, sdate, edate) {
+    def delta(URN urn, String sdate, String edate) {
         try {
-            def result = Files.newDirectoryStream(Paths.get(basePath + urn.toPath()), [
+            def result = Files.newDirectoryStream(Paths.get("${basePath}${urn.toPath()}"), [
                     accept: { Path path ->
-                        def startDate = sdate ? ISODateUtils.toISODate(sdate).millis : ISODateUtils.toISODate("1970-01-01T00:00:00.000Z").millis
+                        def startDate = sdate ? ISODateUtils.toISODate(sdate).millis : 0L
                         def endDate = edate ? ISODateUtils.toISODate(edate).millis : DateTime.now().millis
 
                         def lastModified = path.toFile().lastModified()
-                        lastModified > startDate && lastModified < endDate
+                        lastModified >= startDate && lastModified < endDate
                     }
             ] as DirectoryStream.Filter<Path>
             ).collect { path ->
-                compose(basePath, path)
+                new URNImpl(Paths.get(basePath), path).toString()
             }.flatten()
             result
         } catch (IOException e) {
@@ -49,20 +50,4 @@ class DeltaService {
         }
     }
 
-    //TODO: Check to solve this in UrnImpl
-    /**
-     * Converts filePath to urn
-     *
-     * @param basePath ( eg. " ${REPO_FOLDER}
-     * @param path ( eg. " ${REPO_FOLDER}/ flix_sku / global / en_gb / xel1bu " ) ( mandatory )
-     * @return urn (eg. urn:flix_sku:global:en_gb:xel1bu)
-     */
-    static def compose(basePath, Path path) {
-        def urn = ""
-        while (path != Paths.get(basePath)) {
-            urn = ":${path.fileName}${urn}"
-            path = path.parent
-        }
-        "urn${urn}".toString()
-    }
 }

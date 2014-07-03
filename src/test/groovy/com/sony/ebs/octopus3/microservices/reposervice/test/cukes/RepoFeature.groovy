@@ -52,7 +52,7 @@ When(~'I read urn: (.*)') { String urn ->
 When(~'I ask for delta with urn: (.*) and start date: (.*) and end date: (.*)') { String urn, String sdate, String edate ->
     resetRequest()
 
-    def uri = new groovyx.net.http.URIBuilder("http://repository/delta/${urn}")
+    def uri = new URI("http://repository/delta/${urn}")
     if (sdate != "null")
         uri.addQueryParam("sdate", sdate)
     if (edate != "null")

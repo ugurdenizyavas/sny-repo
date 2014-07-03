@@ -69,7 +69,7 @@ idea {
     }
 }
 
-run { systemProperty('storage.root', System.getProperty('storage.root')) }
+run { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
 run { systemProperty('environment', System.getProperty('environment')) }
 test { systemProperty('environment', System.getProperty('environment')) }
 
@@ -78,6 +78,8 @@ test { systemProperty('environment', System.getProperty('environment')) }
 //======================================================================
 
 dependencies {
+    compile "com.sony.ebs.octopus3:octopus3-commons:1.0-SNAPSHOT"
+
     compile "org.springframework:spring-core:4.0.5.RELEASE"
     compile "org.springframework:spring-context:4.0.5.RELEASE"
     compile "org.springframework:spring-beans:4.0.5.RELEASE"
@@ -85,7 +87,6 @@ dependencies {
     compile "io.ratpack:ratpack-jackson:0.9.5"
     compile "org.slf4j:slf4j-api:1.7.5"
     compile "org.slf4j:slf4j-log4j12:1.7.5"
-    compile "com.sony.ebs.octopus3:octopus3-commons:1.0-SNAPSHOT"
     compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.5.0', {
         exclude module: "commons-logging"
         exclude module: "xml-apis"
