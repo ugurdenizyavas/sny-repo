@@ -1,11 +1,14 @@
 package com.sony.ebs.octopus3.microservices.reposervice.test
 
+import com.sony.ebs.octopus3.commons.file.FileUtils
 import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.business.DeltaService
 import com.sony.ebs.octopus3.microservices.reposervice.business.RepoService
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
+
+import java.nio.file.Paths
 
 /**
  * author: TRYavasU
@@ -24,9 +27,9 @@ class DeltaServiceTest {
         deltaService = new DeltaService(basePath: TEST_FOLDER_PATH)
         new File(TEST_FOLDER_PATH).delete()
 
-        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme", "1971-01-01T00:00:00.000Z")
-        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1baep"), "deneme2", "1980-01-01T00:00:00.000Z")
-        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1ba54"), "deneme3", "1990-01-01T00:00:00.000Z")
+        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme".getBytes(), "1971-01-01T00:00:00.000Z")
+        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1baep"), "deneme2".getBytes(), "1980-01-01T00:00:00.000Z")
+        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1ba54"), "deneme3".getBytes(), "1990-01-01T00:00:00.000Z")
     }
 
     @Test
@@ -68,7 +71,7 @@ class DeltaServiceTest {
 
     @After
     void tearDown() {
-        new File(TEST_FOLDER_PATH).delete()
+        FileUtils.deleteDirectory(Paths.get(TEST_FOLDER_PATH + "/flix_sku/global/en_gb"))
     }
 
 }

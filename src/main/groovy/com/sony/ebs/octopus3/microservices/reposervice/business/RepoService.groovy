@@ -1,6 +1,7 @@
 package com.sony.ebs.octopus3.microservices.reposervice.business
 
 import com.sony.ebs.octopus3.commons.date.ISODateUtils
+import com.sony.ebs.octopus3.commons.file.FileUtils
 import com.sony.ebs.octopus3.commons.urn.URN
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -28,16 +29,10 @@ class RepoService {
      * @return path of the file
      */
     void write(URN urn, file, updateDate) {
-        try {
-            def path = Paths.get(basePath + urn.toPath())
-            Files.deleteIfExists(path)
-            Files.createDirectories(path.parent)
-            path << file
-            if (updateDate) {
-                Files.setLastModifiedTime(path, FileTime.fromMillis(ISODateUtils.toISODate(updateDate).millis))
-            }
-        } catch (all) {
-            throw all
+        Path path = Paths.get(basePath + urn.toPath())
+        FileUtils.writeFile(path, file, true, true)
+        if (updateDate) {
+            Files.setLastModifiedTime(path, FileTime.fromMillis(ISODateUtils.toISODate(updateDate).millis))
         }
     }
 
@@ -62,38 +57,7 @@ class RepoService {
     void delete(URN urn) {
         def path = Paths.get(basePath + urn.toPath())
         if (Files.exists(path)) {
-            removeRecursive(path)
+            FileUtils.deleteDirectory(path)
         }
-    }
-
-    static void removeRecursive(Path path) throws IOException {
-        Files.walkFileTree(path, new SimpleFileVisitor<Path>() {
-            @Override
-            public FileVisitResult visitFile(Path file, BasicFileAttributes attrs)
-                    throws IOException {
-                Files.delete(file);
-                FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult visitFileFailed(Path file, IOException exc) throws IOException {
-                // try to delete the file anyway, even if its attributes
-                // could not be read, since delete-only access is
-                // theoretically possible
-                Files.delete(file);
-                FileVisitResult.CONTINUE;
-            }
-
-            @Override
-            public FileVisitResult postVisitDirectory(Path dir, IOException exc) throws IOException {
-                if (exc == null) {
-                    Files.delete(dir);
-                    FileVisitResult.CONTINUE;
-                } else {
-                    // directory iteration failed; propagate exception
-                    throw exc;
-                }
-            }
-        })
     }
 }
