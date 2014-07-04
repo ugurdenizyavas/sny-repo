@@ -3,6 +3,7 @@ package com.sony.ebs.octopus3.microservices.reposervice.test.cukes
 import com.jayway.restassured.http.ContentType
 import cucumber.api.groovy.EN
 import cucumber.api.groovy.Hooks
+import groovyx.net.http.URIBuilder
 import ratpack.groovy.test.LocalScriptApplicationUnderTest
 import ratpack.groovy.test.TestHttpClient
 import ratpack.groovy.test.TestHttpClients
@@ -33,7 +34,7 @@ After() {
 
 Given(~'I delete folder urn: (.*)') { String urn ->
     resetRequest()
-    delete("repository/file/delete/${urn}")
+    delete("repository/file/${urn}")
 }
 
 When(~'I write urn: (.*) and updateDate: (.*) and content: content') { String urn, String updateDate ->
@@ -41,18 +42,18 @@ When(~'I write urn: (.*) and updateDate: (.*) and content: content') { String ur
     request.contentType(ContentType.TEXT)
     request.body("content")
 
-    post(updateDate != "null" ? "repository/file/write/${urn}?updateDate=${updateDate}" : "repository/file/write/${urn}")
+    post(updateDate != "null" ? "repository/file/${urn}?updateDate=${updateDate}" : "repository/file/${urn}")
 }
 
 When(~'I read urn: (.*)') { String urn ->
     resetRequest()
-    get("repository/file/read/${urn}")
+    get("repository/file/${urn}")
 }
 
 When(~'I ask for delta with urn: (.*) and start date: (.*) and end date: (.*)') { String urn, String sdate, String edate ->
     resetRequest()
 
-    def uri = new URI("http://repository/delta/${urn}")
+    def uri = new URIBuilder("http://repository/delta/${urn}")
     if (sdate != "null")
         uri.addQueryParam("sdate", sdate)
     if (edate != "null")
