@@ -7,7 +7,6 @@ import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 import java.nio.file.*
-import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.FileTime
 
 /**
@@ -54,10 +53,12 @@ class RepoService {
      * Deletes folder or file for given urn
      * @param urn (eg. urn:flix_sku:global:en_gb) (mandatory)
      */
-    void delete(URN urn) {
+    def delete(URN urn) {
         def path = Paths.get(basePath + urn.toPath())
         if (Files.exists(path)) {
             FileUtils.deleteDirectory(path)
+        } else {
+            null
         }
     }
 }

@@ -124,9 +124,9 @@ ratpack {
                                     blocking {
                                         repoService.delete urn
                                     }
-                            ) subscribe {
+                            ) subscribe { result ->
                                 response.status(202)
-                                render json(status: 202, message: "accepted")
+                                render json(status: 202, deletedFiles: result.collect { it.toString() })
                             }
                         } catch (URNCreationException e) {
                             response.status(400)

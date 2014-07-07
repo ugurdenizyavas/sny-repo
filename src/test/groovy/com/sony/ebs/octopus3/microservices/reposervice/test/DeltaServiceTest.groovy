@@ -8,15 +8,13 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
-import java.nio.file.Paths
-
 /**
  * author: TRYavasU
  * date: 25/06/2014
  */
 class DeltaServiceTest {
 
-    final def TEST_FOLDER_PATH = "tmp"
+    final def TEST_FOLDER_PATH = System.getProperty("java.io.tmpdir") + "/testPath"
 
     RepoService repoService
     DeltaService deltaService

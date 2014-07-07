@@ -15,7 +15,7 @@ import static org.junit.Assert.assertTrue
 
 class RepoServiceTest {
 
-    final def static TEST_FOLDER_PATH = "tmp"
+    final def static TEST_FOLDER_PATH = System.getProperty("java.io.tmpdir") + "/testPath"
 
     RepoService repoService
 
