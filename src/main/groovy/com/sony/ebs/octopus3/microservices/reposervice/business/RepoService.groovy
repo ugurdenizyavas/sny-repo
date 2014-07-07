@@ -56,7 +56,7 @@ class RepoService {
     def delete(URN urn) {
         def path = Paths.get(basePath + urn.toPath())
         if (Files.exists(path)) {
-            FileUtils.deleteDirectory(path)
+            FileUtils.delete(path)
         } else {
             null
         }

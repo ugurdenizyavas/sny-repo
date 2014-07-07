@@ -52,7 +52,7 @@ class RepoServiceTest {
 
     @After
     void tearDown() {
-        FileUtils.deleteDirectory(Paths.get(TEST_FOLDER_PATH + "/flix_sku/global/en_gb"))
+        FileUtils.delete(Paths.get(TEST_FOLDER_PATH + "/flix_sku/global/en_gb"))
     }
 
     static void assertFile(relativePath, content) {

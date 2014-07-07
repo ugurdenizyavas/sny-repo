@@ -8,6 +8,8 @@ import org.junit.After
 import org.junit.Before
 import org.junit.Test
 
+import java.nio.file.Paths
+
 /**
  * author: TRYavasU
  * date: 25/06/2014
@@ -69,7 +71,7 @@ class DeltaServiceTest {
 
     @After
     void tearDown() {
-        FileUtils.deleteDirectory(Paths.get(TEST_FOLDER_PATH + "/flix_sku/global/en_gb"))
+        FileUtils.delete(Paths.get(TEST_FOLDER_PATH + "/flix_sku/global/en_gb"))
     }
 
 }
