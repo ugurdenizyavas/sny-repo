@@ -43,7 +43,7 @@ class RepoService {
     def read(URN urn) {
         def path = Paths.get(basePath + urn.toPath())
         if (Files.notExists(path)) {
-            throw new FileNotFoundException("File in path ${path} not found")
+            throw new FileNotFoundException("File in path ${urn.toPath()} not found")
         } else {
             path
         }
@@ -55,10 +55,6 @@ class RepoService {
      */
     def delete(URN urn) {
         def path = Paths.get(basePath + urn.toPath())
-        if (Files.exists(path)) {
-            FileUtils.delete(path)
-        } else {
-            null
-        }
+        FileUtils.delete(path)
     }
 }

@@ -105,7 +105,7 @@ ratpack {
                                     },
                                     onError    : { Exception e ->
                                         response.status(404)
-                                        render json([code: 404, message: e.message])
+                                        render json([status: 404, message: e.message])
                                     }
                             ] as Subscriber<Path>))
                         } catch (URNCreationException e) {

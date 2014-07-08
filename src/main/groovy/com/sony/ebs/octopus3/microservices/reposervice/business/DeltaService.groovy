@@ -47,6 +47,7 @@ class DeltaService {
             result
         } catch (IOException e) {
             e.printStackTrace();
+            []
         }
     }
 
