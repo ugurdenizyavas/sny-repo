@@ -62,7 +62,9 @@ When(~'I write (.*) for content (.*) as if in date (.*)') { String urn, String c
     request.contentType(ContentType.TEXT)
     request.body(content)
 
-    post(updateDate != "null" ? "repository/file/${urn}?updateDate=${updateDate}" : "repository/file/${urn}")
+    def uri = new URIBuilder("//repository/file/${urn}")
+    uri.addQueryParam("updateDate", updateDate == "null" ? null : updateDate)
+    post(uri.toString())
 }
 
 When(~'I read (.*)') { String urn ->
@@ -72,14 +74,10 @@ When(~'I read (.*)') { String urn ->
 
 When(~'I ask for delta for (.*) for start date (.*) and end date (.*)') { urn, sdate, edate ->
     resetRequest()
-    def uri = new URIBuilder("http://repository/delta/${urn}")
-    if (sdate != "null")
-        uri.addQueryParam("sdate", sdate)
-    if (edate != "null")
-        uri.addQueryParam("edate", edate)
-
-    //Remove "https://"
-    get(uri.toString().substring(7))
+    def uri = new URIBuilder("//repository/delta/${urn}")
+    uri.addQueryParam("sdate", sdate == "null" ? null : sdate)
+    uri.addQueryParam("edate", edate == "null" ? null : edate)
+    get(uri.toString())
 }
 
 //=======================================
