@@ -1,12 +1,14 @@
 package com.sony.ebs.octopus3.microservices.reposervice.business
 
-import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.file.FileUtils
 import com.sony.ebs.octopus3.commons.urn.URN
+import org.joda.time.DateTime
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
-import java.nio.file.*
+import java.nio.file.Files
+import java.nio.file.Path
+import java.nio.file.Paths
 import java.nio.file.attribute.FileTime
 
 /**
@@ -27,11 +29,11 @@ class RepoService {
      * @param updateDate last modification date for the new file (optional)
      * @return path of the file
      */
-    void write(URN urn, file, updateDate) {
+    void write(URN urn, byte[] file, DateTime updateDate) {
         Path path = Paths.get(basePath + urn.toPath())
         FileUtils.writeFile(path, file, true, true)
         if (updateDate) {
-            Files.setLastModifiedTime(path, FileTime.fromMillis(ISODateUtils.toISODate(updateDate).millis))
+            Files.setLastModifiedTime(path, FileTime.fromMillis(updateDate.millis))
         }
     }
 

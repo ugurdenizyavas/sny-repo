@@ -1,6 +1,5 @@
 package com.sony.ebs.octopus3.microservices.reposervice.business
 
-import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.urn.URN
 import com.sony.ebs.octopus3.commons.urn.URNImpl
 import org.joda.time.DateTime
@@ -30,12 +29,12 @@ class DeltaService {
      * @param edate End date to for the time interval. (optional, default: now)
      * @return urns of result files
      */
-    def delta(URN urn, String sdate, String edate) {
+    def delta(URN urn, DateTime sdate, DateTime edate) {
         try {
             def result = Files.newDirectoryStream(Paths.get("${basePath}${urn.toPath()}"), [
                     accept: { Path path ->
-                        def startDate = sdate ? ISODateUtils.toISODate(sdate).millis : 0L
-                        def endDate = edate ? ISODateUtils.toISODate(edate).millis : DateTime.now().millis
+                        def startDate = sdate ? sdate.millis : 0L
+                        def endDate = edate ? edate.millis : DateTime.now().millis
 
                         def lastModified = path.toFile().lastModified()
                         lastModified >= startDate && lastModified < endDate

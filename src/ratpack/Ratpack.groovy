@@ -1,3 +1,4 @@
+import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.process.ProcessIdImpl
 import com.sony.ebs.octopus3.commons.urn.URNCreationException
 import com.sony.ebs.octopus3.commons.urn.URNImpl
@@ -60,11 +61,12 @@ ratpack {
                     post() {
                         def file = request.body.bytes
                         def urnStr = pathTokens.urn
-                        def updateDate = request.queryParams.updateDate
+                        def updateDateStr = request.queryParams.updateDate
                         def processIdStr = request.queryParams.processId
 
                         try {
                             def urn = new URNImpl(urnStr)
+                            def updateDate = updateDateStr ? ISODateUtils.toISODate(updateDateStr) : null
                             def processId = new ProcessIdImpl(processIdStr)
 
                             if (file) {
@@ -140,11 +142,13 @@ ratpack {
         //Delta Service
         get("repository/delta/:urn") {
             def urnStr = pathTokens.urn
-            def sdate = request.queryParams.sdate
-            def edate = request.queryParams.edate
+            def sdateStr = request.queryParams.sdate
+            def edateStr = request.queryParams.edate
 
             try {
                 def urn = new URNImpl(urnStr)
+                def sdate = sdateStr ? ISODateUtils.toISODate(sdateStr) : null
+                def edate = edateStr ? ISODateUtils.toISODate(edateStr) : null
 
                 observe(
                         promise { Fulfiller fulfiller ->
@@ -157,7 +161,7 @@ ratpack {
                 ) subscribe { result ->
                     render json(result)
                 }
-            } catch (URNCreationException e) {
+            } catch (Exception e) {
                 response.status(400)
                 render json(status: 400, message: "rejected")
             }

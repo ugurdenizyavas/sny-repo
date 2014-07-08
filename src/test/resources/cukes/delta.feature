@@ -34,3 +34,11 @@ Feature: Delta service
   Scenario: Repository is empty
     When I ask for delta for urn:cucumber:a:b for start date null and end date null
     Then Delta response is [ ]
+
+  Scenario: Ask delta with invalid parameters
+    When I ask for delta for X for start date null and end date null
+    Then Delta response is {"status":400,"message":"rejected"}
+    When I ask for delta for urn:cucumber:a:b for start date X and end date null
+    Then Delta response is {"status":400,"message":"rejected"}
+    When I ask for delta for urn:cucumber:a:b for start date null and end date X
+    Then Delta response is {"status":400,"message":"rejected"}
