@@ -1,5 +1,6 @@
 package com.sony.ebs.octopus3.microservices.reposervice.test
 
+import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.file.FileUtils
 import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.business.DeltaService
@@ -27,14 +28,14 @@ class DeltaServiceTest {
         deltaService = new DeltaService(basePath: TEST_FOLDER_PATH)
         new File(TEST_FOLDER_PATH).delete()
 
-        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme".getBytes(), "1971-01-01T00:00:00.000Z")
-        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1baep"), "deneme2".getBytes(), "1980-01-01T00:00:00.000Z")
-        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1ba54"), "deneme3".getBytes(), "1990-01-01T00:00:00.000Z")
+        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme".getBytes(), ISODateUtils.toISODate("1971-01-01T00:00:00.000Z"))
+        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1baep"), "deneme2".getBytes(), ISODateUtils.toISODate("1980-01-01T00:00:00.000Z"))
+        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1ba54"), "deneme3".getBytes(), ISODateUtils.toISODate("1990-01-01T00:00:00.000Z"))
     }
 
     @Test
     void shouldWorkWithStartAndEndDate() {
-        def contents = deltaService.delta(new URNImpl("urn:flix_sku:global:en_gb"), "1975-01-01T00:00:00.000Z", "1985-01-01T00:00:00.000Z")
+        def contents = deltaService.delta(new URNImpl("urn:flix_sku:global:en_gb"), ISODateUtils.toISODate("1975-01-01T00:00:00.000Z"), ISODateUtils.toISODate("1985-01-01T00:00:00.000Z"))
         assert contents.size == 1
 
         assert contents[0] == "urn:flix_sku:global:en_gb:xel1baep"
@@ -42,7 +43,7 @@ class DeltaServiceTest {
 
     @Test
     void shouldWorkWithStartDate() {
-        def contents = deltaService.delta(new URNImpl("urn:flix_sku:global:en_gb"), "1975-01-01T00:00:00.000Z", null)
+        def contents = deltaService.delta(new URNImpl("urn:flix_sku:global:en_gb"), ISODateUtils.toISODate("1975-01-01T00:00:00.000Z"), null)
         assert contents.size == 2
 
         assert contents[0] == "urn:flix_sku:global:en_gb:xel1ba54"
@@ -51,7 +52,7 @@ class DeltaServiceTest {
 
     @Test
     void shouldWorkWithEndDate() {
-        def contents = deltaService.delta(new URNImpl("urn:flix_sku:global:en_gb"), null, "1985-01-01T00:00:00.000Z")
+        def contents = deltaService.delta(new URNImpl("urn:flix_sku:global:en_gb"), null, ISODateUtils.toISODate("1985-01-01T00:00:00.000Z"))
         assert contents.size == 2
 
         assert contents[0] == "urn:flix_sku:global:en_gb:xel1baep"

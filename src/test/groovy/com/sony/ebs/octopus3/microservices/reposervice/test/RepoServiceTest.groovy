@@ -54,15 +54,15 @@ class RepoServiceTest {
     void shouldZipRepoWithUrn() {
         FileUtils.writeFile(Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1ba"), "content".bytes, true, true)
         FileUtils.writeFile(Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1bu"), "content".bytes, true, true)
-        def zippedFiles = repoService.zip(new URNImpl("urn:flix_sku:global:en_gb"), TEST_FOLDER_PATH + "/temp.zip")
+        def zipResult = repoService.zip(new URNImpl("urn:flix_sku:global:en_gb"))
 
-        assertEquals Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1ba"), zippedFiles[0]
-        assertEquals Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1bu"), zippedFiles[1]
+        assertEquals Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1ba"), zipResult.getTracked()[0]
+        assertEquals Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1bu"), zipResult.getTracked()[1]
     }
 
     @Test(expected = FileNotFoundException.class)
     void shouldGivErrorForZipIfNoFolder() {
-        repoService.zip(new URNImpl("urn:flix_sku:global:km_km"), TEST_FOLDER_PATH + "/temp.zip")
+        repoService.zip(new URNImpl("urn:flix_sku:global:km_km"))
     }
 
     @After
