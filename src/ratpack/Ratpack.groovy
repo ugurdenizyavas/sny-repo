@@ -55,88 +55,119 @@ ratpack {
         }
 
         //Repo Service
-        prefix("repository/file/:urn") {
-            handler {
-                byMethod {
-                    post() {
-                        def file = request.body.bytes
-                        def urnStr = pathTokens.urn
-                        def updateDateStr = request.queryParams.updateDate
-                        def processIdStr = request.queryParams.processId
+        handler("repository/file/:urn") {
+            byMethod {
+                post() {
+                    def file = request.body.bytes
+                    def urnStr = pathTokens.urn
+                    def updateDateStr = request.queryParams.updateDate
+                    def processIdStr = request.queryParams.processId
 
-                        try {
-                            def urn = new URNImpl(urnStr)
-                            def updateDate = updateDateStr ? ISODateUtils.toISODate(updateDateStr) : null
-                            def processId = new ProcessIdImpl(processIdStr)
+                    try {
+                        def urn = new URNImpl(urnStr)
+                        def updateDate = updateDateStr ? ISODateUtils.toISODate(updateDateStr) : null
+                        def processId = new ProcessIdImpl(processIdStr)
 
-                            if (file) {
-                                observe(
-                                        blocking {
-                                            repoService.write urn, file, updateDate
-                                        }
-                                ) subscribe {
-                                    response.status(202)
-                                    render json(status: 202, message: "accepted")
-                                }
-                            } else {
-                                response.status(400)
-                                render json(status: 400, message: "rejected")
-                            }
-                        } catch (URNCreationException e) {
-                            response.status(400)
-                            render json(status: 400, message: "rejected")
-                        }
-
-                    }
-
-                    get() {
-                        def urnStr = pathTokens.urn
-
-                        try {
-                            def urn = new URNImpl(urnStr)
-
+                        if (file) {
                             observe(
                                     blocking {
-                                        repoService.read(urn)
+                                        repoService.write urn, file, updateDate
                                     }
-                            ).subscribe(([
-                                    onCompleted: {
-                                    },
-                                    onNext     : { Path result ->
-                                        response.sendFile context, result
-                                    },
-                                    onError    : { Exception e ->
-                                        response.status(404)
-                                        render json([status: 404, message: e.message])
-                                    }
-                            ] as Subscriber<Path>))
-                        } catch (URNCreationException e) {
-                            response.status(400)
-                            render json(status: 400, message: "rejected")
-                        }
-                    }
-
-                    delete() {
-                        def urnStr = pathTokens.urn
-
-                        try {
-                            def urn = new URNImpl(urnStr)
-
-                            observe(
-                                    blocking {
-                                        repoService.delete urn
-                                    }
-                            ) subscribe { result ->
+                            ) subscribe {
                                 response.status(202)
-                                render json(status: 202, deletedFiles: result.collect { it.toString() })
+                                render json(status: 202, message: "accepted")
                             }
-                        } catch (URNCreationException e) {
+                        } else {
                             response.status(400)
                             render json(status: 400, message: "rejected")
                         }
+                    } catch (URNCreationException e) {
+                        response.status(400)
+                        render json(status: 400, message: "rejected")
+                    }
+
+                }
+
+                get() {
+                    def urnStr = pathTokens.urn
+
+                    try {
+                        def urn = new URNImpl(urnStr)
+
+                        observe(
+                                blocking {
+                                    repoService.read(urn)
+                                }
+                        ).subscribe(([
+                                onCompleted: {
+                                },
+                                onNext     : { Path result ->
+                                    response.sendFile context, result
+                                },
+                                onError    : { Exception e ->
+                                    response.status(404)
+                                    render json([status: 404, message: e.message])
+                                }
+                        ] as Subscriber<Path>))
+                    } catch (URNCreationException e) {
+                        response.status(400)
+                        render json(status: 400, message: "rejected")
+                    }
+                }
+
+                delete() {
+                    def urnStr = pathTokens.urn
+
+                    try {
+                        def urn = new URNImpl(urnStr)
+
+                        observe(
+                                blocking {
+                                    repoService.delete urn
+                                }
+                        ) subscribe { result ->
+                            response.status(202)
+                            render json(status: 202, deletedFiles: result.collect { it.toString() })
+                        }
+                    } catch (URNCreationException e) {
+                        response.status(400)
+                        render json(status: 400, message: "rejected")
                     }
                 }
             }
+        }
+
+        //OPS
+        get("repository/file/zip/:urn") {
+            final def ZIP_EXTENSION = ".zip"
+            def urnStr = pathTokens.urn
+
+            try {
+                def urn = new URNImpl(urnStr)
+                def zipPath = urn.toPath() + ZIP_EXTENSION
+                observe(
+                        blocking {
+                            repoService.zip urn, zipPath
+                        }
+                ).subscribe(([
+                        onCompleted: {
+                        },
+                        onNext     : { result ->
+                            response.status(202)
+                            render json(status: 202, zippedFiles: result.collect {
+                                it.toString()
+                            }, zipPath: zipPath)
+                        },
+                        onError    : { Exception e ->
+                            response.status(404)
+                            render json([status: 404, message: e.message])
+                        }
+                ] as Subscriber))
+            } catch (URNCreationException e) {
+                response.status(400)
+                render json(status: 400, message: "rejected")
+            }
+
         }
 
         //Delta Service

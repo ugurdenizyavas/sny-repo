@@ -59,4 +59,18 @@ class RepoService {
         def path = Paths.get(basePath + urn.toPath())
         FileUtils.delete(path)
     }
+
+    /**
+     * Zips directory for given urn
+     * @param urn (eg. urn:flix_sku:global:en_gb) (mandatory)
+     * @param zipTarget zip file to create/overwrite
+     */
+    def zip(URN urn, String zipTarget) {
+        def path = Paths.get(basePath + urn.toPath())
+        if (Files.notExists(path)) {
+            throw new FileNotFoundException("File in path ${urn.toPath()} not found")
+        } else {
+            FileUtils.zipDirectory(Paths.get(basePath + zipTarget), path)
+        }
+    }
 }
