@@ -15,21 +15,23 @@ import org.springframework.stereotype.Component
 @Component
 class AmazonUploadService {
 
+    //TODO: Learn this params from Amazon
     final def accessKeyId
     final def secretAccessKey
     final def bucketName
     final def uploadPath
 
+    //TODO: Clarify these params with TCS
     @Value('${amazon.s3.proxyHost}')
-    def proxyHostParam
+    String proxyHostParam
     @Value('${amazon.s3.proxyPort}')
-    def proxyPortParam
+    Integer proxyPortParam
     @Value('${amazon.s3.proxyUsername}')
-    def proxyUsernameParam
+    String proxyUsernameParam
     @Value('${amazon.s3.proxyPassword}')
-    def proxyPasswordParam
+    String proxyPasswordParam
     @Value('${amazon.s3.connectionTimeout}')
-    def connectionTimeoutParam
+    Integer connectionTimeoutParam
 
     void upload(file, destination) {
         //TODO: Parametrize accessKeyId, secretAccessKey, bucketName and uploadPath via destination
@@ -37,11 +39,12 @@ class AmazonUploadService {
                 new BasicAWSCredentials(accessKeyId, secretAccessKey),
                 new ClientConfiguration().with {
                     if (proxyHostParam) setProxyHost(proxyHostParam)
-                    if (proxyPortParam) setProxyPort(proxyPortParam.toInteger())
+                    if (proxyPortParam) setProxyPort(proxyPortParam)
                     if (proxyUsernameParam) setProxyUsername(proxyUsernameParam)
                     if (proxyUsernameParam) setProxyPassword(proxyPasswordParam)
-                    if (connectionTimeoutParam) setConnectionTimeout(connectionTimeoutParam.toInteger())
-                }).with {
+                    if (connectionTimeoutParam) setConnectionTimeout(connectionTimeoutParam)
+                }
+        ).with {
             try {
                 putObject(new PutObjectRequest(bucketName, uploadPath + File.separator + file.name, file))
             } catch (AmazonClientException e) {
