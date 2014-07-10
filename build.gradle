@@ -71,6 +71,7 @@ idea {
 
 run { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
 run { systemProperty('environment', System.getProperty('environment')) }
+test { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
 test { systemProperty('environment', System.getProperty('environment')) }
 
 //======================================================================

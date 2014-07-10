@@ -41,7 +41,7 @@ After() {
 // GIVEN
 //=======================================
 
-Given(~'I delete folder (.*)') { String urn ->
+Given(~'I delete (.*)') { String urn ->
     delete("repository/file/${urn}")
 }
 

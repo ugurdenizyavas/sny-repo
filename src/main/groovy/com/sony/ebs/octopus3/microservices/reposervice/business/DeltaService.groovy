@@ -2,6 +2,7 @@ package com.sony.ebs.octopus3.microservices.reposervice.business
 
 import com.sony.ebs.octopus3.commons.urn.URN
 import com.sony.ebs.octopus3.commons.urn.URNImpl
+import groovy.util.logging.Slf4j
 import org.joda.time.DateTime
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
@@ -15,6 +16,7 @@ import java.nio.file.Paths
  * author: TRYavasU
  * date: 27/06/2014
  */
+@Slf4j
 @Component
 class DeltaService {
 
@@ -45,7 +47,7 @@ class DeltaService {
             }.flatten()
             result
         } catch (IOException e) {
-            e.printStackTrace();
+            log.error("Delta cannot be evaluated due to errors", e)
             []
         }
     }

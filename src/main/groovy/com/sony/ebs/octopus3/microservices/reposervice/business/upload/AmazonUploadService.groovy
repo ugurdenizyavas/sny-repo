@@ -48,7 +48,7 @@ class AmazonUploadService {
             try {
                 putObject(new PutObjectRequest(bucketName, uploadPath + File.separator + file.name, file))
             } catch (AmazonClientException e) {
-                log.error "Unexpected error occurred while uploading amazon feed. Exception: ${e.stackTrace}"
+                log.error "Unexpected error occurred while uploading amazon feed", e
             }
         }
     }
