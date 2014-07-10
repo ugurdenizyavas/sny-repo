@@ -2,13 +2,17 @@ package com.sony.ebs.octopus3.microservices.reposervice.business
 
 import com.sony.ebs.octopus3.commons.file.FileUtils
 import com.sony.ebs.octopus3.commons.urn.URN
+import com.sony.ebs.octopus3.microservices.reposervice.business.upload.AmazonUploadService
+import com.sony.ebs.octopus3.microservices.reposervice.business.upload.RepoUploadEnum
 import org.joda.time.DateTime
+import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.beans.factory.annotation.Value
 import org.springframework.stereotype.Component
 
 import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
+import java.nio.file.StandardCopyOption
 import java.nio.file.attribute.FileTime
 
 /**
@@ -20,6 +24,9 @@ class RepoService {
 
     @Value('${storage.root}')
     String basePath
+
+    @Autowired
+    AmazonUploadService amazonUploadService
 
     /**
      *
@@ -71,6 +78,41 @@ class RepoService {
             throw new FileNotFoundException("File in path ${urn.toPath()} not found")
         } else {
             FileUtils.zip(Paths.get(path.toString() + ".zip"), path)
+        }
+    }
+
+    /**
+     * Copy file/folder from source to destination
+     * @param sourceUrn (eg. urn:flix_sku:global:en_gb) (mandatory)
+     * @param destinationUrn (eg. urn:flix_sku:global:fr_fr) (mandatory)
+     */
+    void copy(URN sourceUrn, URN destinationUrn) {
+        def sourcePath = Paths.get(basePath + sourceUrn.toPath())
+        if (Files.notExists(sourcePath)) {
+            throw new FileNotFoundException("File in sourcePath ${sourceUrn.toPath()} not found")
+        } else {
+            def destinationPath = Paths.get(basePath + destinationUrn.toPath())
+            def destinationParent = destinationPath.parent
+            if (Files.notExists(destinationParent)) {
+                Files.createDirectories(destinationParent)
+            }
+            Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING)
+        }
+    }
+
+    /**
+     * Copy file/folder from source to destination
+     * @param sourceUrn (eg. urn:flix_sku:global:en_gb) (mandatory)
+     * @param destination instance of {@link RepoUploadEnum} (mandatory)
+     */
+    void upload(URN sourceUrn, RepoUploadEnum destination) {
+        def sourcePath = Paths.get(basePath + sourceUrn.toPath())
+        if (Files.notExists(sourcePath)) {
+            throw new FileNotFoundException("File in sourcePath ${sourceUrn.toPath()} not found")
+        } else {
+            if (destination == RepoUploadEnum.S3) {
+                amazonUploadService.upload(sourcePath.toFile(), destination)
+            }
         }
     }
 }

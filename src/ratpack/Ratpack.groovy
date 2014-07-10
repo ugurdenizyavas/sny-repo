@@ -5,6 +5,7 @@ import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.SpringConfig
 import com.sony.ebs.octopus3.microservices.reposervice.business.DeltaService
 import com.sony.ebs.octopus3.microservices.reposervice.business.RepoService
+import com.sony.ebs.octopus3.microservices.reposervice.business.upload.RepoUploadEnum
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
@@ -167,7 +168,68 @@ ratpack {
                 response.status(400)
                 render json(status: 400, message: "rejected")
             }
+        }
 
+        get("repository/file/copy/source/:source/destination/:destination") {
+            def sourceStr = pathTokens.source
+            def destinationStr = pathTokens.destination
+            try {
+                def sourceUrn = new URNImpl(sourceStr)
+                def destinationUrn = new URNImpl(destinationStr)
+                observe(
+                        blocking {
+                            repoService.copy sourceUrn, destinationUrn
+                        }
+                ).subscribe(([
+                        onCompleted: {
+                        },
+                        onNext     : {
+                            response.status(202)
+                            render json(status: 202, message: "accepted")
+                        },
+                        onError    : { Exception e ->
+                            response.status(404)
+                            render json([status: 404, message: e.message])
+                        }
+                ] as Subscriber))
+            } catch (URNCreationException e) {
+                response.status(400)
+                render json(status: 400, message: "rejected")
+            }
+        }
+
+        get("repository/file/upload/source/:source/destination/:destination") {
+            def sourceStr = pathTokens.source
+            def destinationStr = pathTokens.destination
+            try {
+                def sourceUrn = new URNImpl(sourceStr)
+                try {
+                    def destination = RepoUploadEnum.valueOf(destinationStr)
+                    observe(
+                            blocking {
+                                repoService.upload sourceUrn, destination
+                            }
+
+                    ).subscribe(([
+                            onCompleted: {
+                            },
+                            onNext     : {
+                                response.status(202)
+                                render json(status: 202, message: "accepted")
+                            },
+                            onError    : { Exception e ->
+                                response.status(404)
+                                render json([status: 404, message: e.message])
+                            }
+                    ] as Subscriber))
+                } catch (IllegalArgumentException e) {
+                    response.status(400)
+                    render json(status: 400, message: "rejected")
+                }
+            } catch (URNCreationException e) {
+                response.status(400)
+                render json(status: 400, message: "rejected")
+            }
         }
 
         //Delta Service

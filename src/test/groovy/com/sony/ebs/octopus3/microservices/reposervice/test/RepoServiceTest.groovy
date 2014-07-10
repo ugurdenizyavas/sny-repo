@@ -65,6 +65,21 @@ class RepoServiceTest {
         repoService.zip(new URNImpl("urn:flix_sku:global:km_km"))
     }
 
+    @Test
+    void shouldCopyFile() {
+        FileUtils.writeFile(Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1ba"), "content".bytes, true, true)
+        repoService.copy(new URNImpl("urn:flix_sku:global:en_gb:xel1ba"), new URNImpl("urn:flix_sku:global:en_gb:dsch300w"))
+
+        assertFile "/flix_sku/global/en_gb/xel1ba", "content"
+        assertFile "/flix_sku/global/en_gb/dsch300w", "content"
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    void shouldGiveErrorIfFileNotExists() {
+        FileUtils.writeFile(Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1ba"), "content".bytes, true, true)
+        repoService.copy(new URNImpl("urn:flix_sku:global:en_gb:nofile"), new URNImpl("urn:flix_sku:global:en_gb:dsch300w"))
+    }
+
     @After
     void tearDown() {
         FileUtils.delete(Paths.get(TEST_FOLDER_PATH + "/flix_sku/global/en_gb"))
