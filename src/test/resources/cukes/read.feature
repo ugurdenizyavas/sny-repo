@@ -16,3 +16,9 @@ Feature: Read Data
     Given I write urn:cucumber:a:b:c for content content with current date
     When I read urn:cucumber:a:b:ANOTHER_FILE
     Then Response is Not Found and response body is {"status":404,"message":"File in path /cucumber/a/b/another_file not found"}
+	
+  Read a deleted product
+	Given I write urn:cucumber:a:b:c for content content with current date
+	And I delete file urn:cucumber:a:b:c 
+	And when I read urn:cucumber:a:b:c
+	Then Response is Not Found and response body is {"status":404,"message":"File in path /cucumber/a/b/another_file not found"}
