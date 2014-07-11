@@ -9,6 +9,9 @@ import com.sony.ebs.octopus3.microservices.reposervice.business.upload.RepoUploa
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
+import org.springframework.context.annotation.AnnotationConfigUtils
+import org.springframework.context.support.GenericGroovyApplicationContext
+import ratpack.error.DebugErrorHandler
 import ratpack.error.ServerErrorHandler
 import ratpack.exec.Fulfiller
 import ratpack.handling.Context
@@ -32,21 +35,15 @@ ratpack {
 
     bindings {
         add new JacksonModule()
-
-        bind ServerErrorHandler, new ServerErrorHandler() {
-            @Override
-            void error(Context context, Exception exception) {
-                log.error "error", exception
-            }
-        }
+        bind ServerErrorHandler, new DebugErrorHandler()
         init {
-            AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(SpringConfig.class);
-
-            repoService = ctx.getBean(RepoService.class)
-            deltaService = ctx.getBean(DeltaService.class)
-
+            cx = new GenericGroovyApplicationContext()
+            cx.load("config.groovy");
+            AnnotationConfigUtils.registerAnnotationConfigProcessors(cx);
+            cx.beanFactory.registerSingleton "launchConfig", launchConfig
+            cx.beanFactory.registerSingleton "execControl", launchConfig.execController.control
+            cx.refresh();
             RxRatpack.initialize()
-            Jackson
         }
     }
 
