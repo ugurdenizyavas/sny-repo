@@ -72,6 +72,21 @@ When(~'I read (.*)') { String urn ->
     get("repository/file/${urn}")
 }
 
+When(~'I zip (.*)') { String urn ->
+    resetRequest()
+    get("repository/zip/${urn}")
+}
+
+When(~'I copy (.*) to (.*)') { String sourceUrn, String destinationUrn ->
+    resetRequest()
+    get("repository/copy/source/${sourceUrn}/destination/${destinationUrn}")
+}
+
+When(~'I upload (.*) to (.*)') { String sourceUrn, String destination ->
+    resetRequest()
+    get("repository/upload/source/${sourceUrn}/destination/${destination}")
+}
+
 When(~'I ask for delta for (.*) for start date (.*) and end date (.*)') { urn, sdate, edate ->
     resetRequest()
     def uri = new URIBuilder("//repository/delta/${urn}")
@@ -89,6 +104,9 @@ Then(~'Response is (.*) and response body is (.*)') { responseCode, String conte
         case "OK":
             assert 200 == response.statusCode
             break
+        case "Created":
+            assert 201 == response.statusCode
+            break
         case "Accepted":
             assert 202 == response.statusCode
             break
@@ -100,7 +118,6 @@ Then(~'Response is (.*) and response body is (.*)') { responseCode, String conte
             break
         default: assert false
     }
-
 }
 
 Then(~'Delta response is (.*)') { String responseBody ->

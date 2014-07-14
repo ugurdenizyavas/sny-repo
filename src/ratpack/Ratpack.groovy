@@ -211,11 +211,11 @@ ratpack {
             try {
                 params.sourceStr = new URNImpl(pathTokens.source)
                 params.destinationStr = new URNImpl(pathTokens.destination)
-
             } catch (URNCreationException e) {
                 response.status(400)
                 render json(status: 400, message: "rejected")
             }
+
             observe(
                     blocking {
                         repoService.copy params.sourceStr, params.destinationStr
