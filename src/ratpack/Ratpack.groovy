@@ -190,9 +190,9 @@ ratpack {
                     onCompleted: {
                     },
                     onNext     : { result ->
-                        response.status(202)
+                        response.status(201)
                         render json(
-                                status: 202,
+                                status: 201,
                                 zippedFiles: result.collect { it.toString() },
                                 zipPath: params.urn.toPath() + ZIP_EXTENSION
                         )
