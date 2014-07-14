@@ -4,14 +4,14 @@ import com.sony.ebs.octopus3.commons.urn.URNCreationException
 import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.SpringConfig
 import com.sony.ebs.octopus3.microservices.reposervice.business.DeltaService
+import com.sony.ebs.octopus3.microservices.reposervice.business.Operation
+import com.sony.ebs.octopus3.microservices.reposervice.business.OperationEnum
+import com.sony.ebs.octopus3.microservices.reposervice.business.OpsParser
 import com.sony.ebs.octopus3.microservices.reposervice.business.RepoService
 import com.sony.ebs.octopus3.microservices.reposervice.business.upload.RepoUploadEnum
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
-import org.springframework.context.annotation.AnnotationConfigUtils
-import org.springframework.context.support.GenericGroovyApplicationContext
-import ratpack.error.DebugErrorHandler
 import ratpack.error.ServerErrorHandler
 import ratpack.exec.Fulfiller
 import ratpack.handling.Context
@@ -27,6 +27,13 @@ import static ratpack.jackson.Jackson.json
 import static ratpack.rx.RxRatpack.observe
 
 Logger log = LoggerFactory.getLogger("ratpack");
+ServerErrorHandler defaultErrorHandler = [
+        error: { Context context, Exception exception ->
+            log.error "error", exception
+            exception.printStackTrace()
+            context.render "sorry"
+        }
+] as ServerErrorHandler
 
 ratpack {
 
@@ -35,15 +42,17 @@ ratpack {
 
     bindings {
         add new JacksonModule()
-        bind ServerErrorHandler, new DebugErrorHandler()
+
+        bind ServerErrorHandler, defaultErrorHandler
         init {
-            cx = new GenericGroovyApplicationContext()
-            cx.load("config.groovy");
-            AnnotationConfigUtils.registerAnnotationConfigProcessors(cx);
-            cx.beanFactory.registerSingleton "launchConfig", launchConfig
-            cx.beanFactory.registerSingleton "execControl", launchConfig.execController.control
-            cx.refresh();
             RxRatpack.initialize()
+            AnnotationConfigApplicationContext ctx = new AnnotationConfigApplicationContext(SpringConfig.class)
+            ctx.beanFactory.registerSingleton "launchConfig", launchConfig
+
+            repoService = ctx.getBean RepoService.class
+            deltaService = ctx.getBean DeltaService.class
+
+            Jackson
         }
     }
 
@@ -131,6 +140,38 @@ ratpack {
         }
 
         //OPS
+        post("repository/ops") {
+            def params = [:]
+
+            params.recipe = request.body.bytes
+            if (!params.recipe) {
+                response.status(400)
+                render json(status: 400, message: "rejected")
+            }
+
+            observe(
+                    blocking {
+                        OpsParser.parse(new String(params.recipe)).each { Operation operation ->
+                            def parameters = operation.parameters
+                            switch (operation.methodName) {
+                                case OperationEnum.ZIP:
+                                    repoService.zip new URNImpl(parameters.get("source"))
+                                    break
+                                case OperationEnum.UPLOAD:
+                                    repoService.upload new URNImpl(parameters.get("source")), RepoUploadEnum.valueOf(parameters.get("destination"))
+                                    break
+                                case OperationEnum.COPY:
+                                    repoService.copy new URNImpl(parameters.get("source")), new URNImpl(parameters.get("destination"))
+                                    break
+                            }
+                        }
+                    }
+            ) subscribe {
+                response.status(202)
+                render json(status: 202, message: "accepted")
+            }
+        }
+
         get("repository/zip/:urn") {
             final def ZIP_EXTENSION = ".zip"
             def params = [:]
@@ -164,66 +205,62 @@ ratpack {
 
         }
 
-        get("repository/file/copy/source/:source/destination/:destination") {
-            def sourceStr = pathTokens.source
-            def destinationStr = pathTokens.destination
+        get("repository/copy/source/:source/destination/:destination") {
+            def params = [:]
+
             try {
-                def sourceUrn = new URNImpl(sourceStr)
-                def destinationUrn = new URNImpl(destinationStr)
-                observe(
-                        blocking {
-                            repoService.copy sourceUrn, destinationUrn
-                        }
-                ).subscribe(([
-                        onCompleted: {
-                        },
-                        onNext     : {
-                            response.status(202)
-                            render json(status: 202, message: "accepted")
-                        },
-                        onError    : { Exception e ->
-                            response.status(404)
-                            render json([status: 404, message: e.message])
-                        }
-                ] as Subscriber))
+                params.sourceStr = new URNImpl(pathTokens.source)
+                params.destinationStr = new URNImpl(pathTokens.destination)
+
             } catch (URNCreationException e) {
                 response.status(400)
                 render json(status: 400, message: "rejected")
             }
+            observe(
+                    blocking {
+                        repoService.copy params.sourceStr, params.destinationStr
+                    }
+            ).subscribe(([
+                    onCompleted: {
+                    },
+                    onNext     : {
+                        response.status(202)
+                        render json(status: 202, message: "accepted")
+                    },
+                    onError    : { Exception e ->
+                        response.status(404)
+                        render json([status: 404, message: e.message])
+                    }
+            ] as Subscriber))
         }
 
-        get("repository/file/upload/source/:source/destination/:destination") {
-            def sourceStr = pathTokens.source
-            def destinationStr = pathTokens.destination
-            try {
-                def sourceUrn = new URNImpl(sourceStr)
-                try {
-                    def destination = RepoUploadEnum.valueOf(destinationStr)
-                    observe(
-                            blocking {
-                                repoService.upload sourceUrn, destination
-                            }
+        get("repository/upload/source/:source/destination/:destination") {
+            def params = [:]
 
-                    ).subscribe(([
-                            onCompleted: {
-                            },
-                            onNext     : {
-                                response.status(202)
-                                render json(status: 202, message: "accepted")
-                            },
-                            onError    : { Exception e ->
-                                response.status(404)
-                                render json([status: 404, message: e.message])
-                            }
-                    ] as Subscriber))
-                } catch (IllegalArgumentException e) {
-                    response.status(400)
-                    render json(status: 400, message: "rejected")
-                }
-            } catch (URNCreationException e) {
+            try {
+                params.sourceUrn = new URNImpl(pathTokens.source)
+                params.destination = RepoUploadEnum.valueOf(pathTokens.destination)
+            } catch (Exception e) {
                 response.status(400)
                 render json(status: 400, message: "rejected")
             }
+
+            observe(
+                    blocking {
+                        repoService.upload params.sourceUrn, params.destination
+                    }
+            ).subscribe(([
+                    onCompleted: {
+                    },
+                    onNext     : {
+                        response.status(202)
+                        render json(status: 202, message: "accepted")
+                    },
+                    onError    : { Exception e ->
+                        response.status(404)
+                        render json([status: 404, message: e.message])
+                    }
+            ] as Subscriber))
         }
 
         //Delta Service

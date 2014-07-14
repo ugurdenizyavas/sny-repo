@@ -1,0 +1,21 @@
+{
+    "ops": [
+        {
+            "zip": {
+                "source": "urn:flix_sku:global:en_gb"
+            }
+        },
+        {
+            "copy": {
+                "source": "urn:flix_sku:global:en_gb.zip",
+                "destination": "urn:archive:flix_sku:global:en_gb.zip"
+            }
+        },
+        {
+            "upload": {
+                "source": "urn:flix_sku:global:en_gb.zip",
+                "destination": "S3"
+            }
+        }
+    ]
+}
