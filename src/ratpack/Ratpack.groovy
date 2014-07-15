@@ -113,7 +113,7 @@ ratpack {
                         if (!params.file) new RuntimeException("File parameter is empty")
                         params.urn = new URNImpl(pathTokens.urn)
                         params.updateDate = request.queryParams.updateDate ? ISODateUtils.toISODate(request.queryParams.updateDate) : null
-                        params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : null
+                        params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
                     } catch (Exception e) {
                         response.status(400)
                         render json(status: 400, message: "rejected")
@@ -134,6 +134,7 @@ ratpack {
 
                     try {
                         params.urn = new URNImpl(pathTokens.urn)
+                        params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
                     } catch (Exception e) {
                         response.status(400)
                         render json(status: 400, message: "rejected")
@@ -161,6 +162,7 @@ ratpack {
 
                     try {
                         params.urn = new URNImpl(pathTokens.urn)
+                        params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
                     } catch (Exception e) {
                         response.status(400)
                         render json(status: 400, message: "rejected")
@@ -172,7 +174,9 @@ ratpack {
                             }
                     ) subscribe { result ->
                         response.status(202)
-                        render json(status: 202, deletedFiles: result.collect { it.toString() })
+                        render json(status: 202, deletedFiles: result.filesTracked.collect {
+                            it.toString()
+                        }, failedFiles: result.filesFailed.collect { it.toString() })
                     }
 
                 }
@@ -184,6 +188,8 @@ ratpack {
             def params = [:]
 
             params.recipe = request.body.bytes
+            params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+
             if (!params.recipe) {
                 response.status(400)
                 render json(status: 400, message: "rejected")
@@ -236,6 +242,7 @@ ratpack {
             def params = [:]
             try {
                 params.urn = new URNImpl(pathTokens.urn)
+                params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
             } catch (URNCreationException e) {
                 response.status(400)
                 render json(status: 400, message: "rejected")
@@ -270,6 +277,7 @@ ratpack {
             try {
                 params.sourceStr = new URNImpl(pathTokens.source)
                 params.destinationStr = new URNImpl(pathTokens.destination)
+                params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
             } catch (URNCreationException e) {
                 response.status(400)
                 render json(status: 400, message: "rejected")
@@ -299,6 +307,7 @@ ratpack {
             try {
                 params.sourceUrn = new URNImpl(pathTokens.source)
                 params.destination = RepoUploadEnum.valueOf(pathTokens.destination)
+                params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
             } catch (Exception e) {
                 response.status(400)
                 render json(status: 400, message: "rejected")
@@ -330,6 +339,7 @@ ratpack {
                 params.urn = new URNImpl(pathTokens.urn)
                 params.sdate = request.queryParams.sdate ? ISODateUtils.toISODate(request.queryParams.sdate) : null
                 params.edate = request.queryParams.edate ? ISODateUtils.toISODate(request.queryParams.edate) : null
+                params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
             } catch (Exception e) {
                 response.status(400)
                 render json(status: 400, message: "rejected")
