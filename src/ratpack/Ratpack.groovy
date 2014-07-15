@@ -4,6 +4,7 @@ import com.sony.ebs.octopus3.commons.urn.URNCreationException
 import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.SpringConfig
 import com.sony.ebs.octopus3.microservices.reposervice.business.DeltaService
+import com.sony.ebs.octopus3.microservices.reposervice.business.MonitoringService
 import com.sony.ebs.octopus3.microservices.reposervice.business.Operation
 import com.sony.ebs.octopus3.microservices.reposervice.business.OperationEnum
 import com.sony.ebs.octopus3.microservices.reposervice.business.OpsParser
@@ -39,6 +40,7 @@ ratpack {
 
     RepoService repoService
     DeltaService deltaService
+    MonitoringService monitoringService
 
     bindings {
         add new JacksonModule()
@@ -51,6 +53,7 @@ ratpack {
 
             repoService = ctx.getBean RepoService.class
             deltaService = ctx.getBean DeltaService.class
+            monitoringService = ctx.getBean MonitoringService.class
 
             Jackson
         }
@@ -59,6 +62,39 @@ ratpack {
     handlers {
         get("repository") {
             render json(status: 200, message: "Welcome to Repo Service")
+        }
+
+        get("repository/healthCheck") {
+            def params = [:]
+
+            params.enabled = request.queryParams.enabled
+
+            if (params.enabled) {
+                def action = params.enabled.toBoolean()
+                if (action) {
+                    monitoringService.up()
+                    render json(status: 200, message: "App is up for the eyes of LB!")
+                } else {
+                    monitoringService.down()
+                    render json(status: 200, message: "App is down for the eyes of LB!")
+                }
+            } else {
+                if (monitoringService.checkStatus()) {
+                    render json(status: 200, message: "Ticking!")
+                } else {
+                    render json(status: 404, message: "App is down!")
+                }
+            }
+        }
+
+        get("repository/healthCheck/down") {
+            monitoringService.down()
+            render json(status: 200, message: "App is down for the eyes of LB!")
+        }
+
+        get("repository/healthCheck/up") {
+            monitoringService.up()
+            render json(status: 200, message: "App is up for the eyes of LB!")
         }
 
         //Repo Service
@@ -183,12 +219,11 @@ ratpack {
                             )
                         }
                     },
-                    onError    :
-                            {
-                                Exception e ->
-                                    response.status(404)
-                                    render json([status: 404, message: e.message])
-                            }
+                    onError    : {
+                        Exception e ->
+                            response.status(404)
+                            render json([status: 404, message: e.message])
+                    }
             ] as Subscriber))
         }
 
