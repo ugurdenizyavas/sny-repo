@@ -73,15 +73,19 @@ ratpack {
                 def action = params.enabled.toBoolean()
                 if (action) {
                     monitoringService.up()
+                    response.status(200)
                     render json(status: 200, message: "App is up for the eyes of LB!")
                 } else {
                     monitoringService.down()
+                    response.status(200)
                     render json(status: 200, message: "App is down for the eyes of LB!")
                 }
             } else {
                 if (monitoringService.checkStatus()) {
+                    response.status(200)
                     render json(status: 200, message: "Ticking!")
                 } else {
+                    response.status(404)
                     render json(status: 404, message: "App is down!")
                 }
             }
