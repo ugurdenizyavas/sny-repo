@@ -354,7 +354,7 @@ ratpack {
                         }
                     }
             ) subscribe { result ->
-                render json(result)
+                render json(results: result)
             }
         }
     }
