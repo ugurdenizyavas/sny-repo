@@ -7,6 +7,7 @@ import cucumber.api.groovy.Hooks
 import groovyx.net.http.URIBuilder
 import org.codehaus.jackson.map.JsonMappingException
 import org.codehaus.jackson.map.ObjectMapper
+import org.springframework.core.io.ClassPathResource
 import ratpack.groovy.test.LocalScriptApplicationUnderTest
 import ratpack.groovy.test.TestHttpClient
 import ratpack.groovy.test.TestHttpClients
@@ -85,6 +86,14 @@ When(~'I copy (.*) to (.*)') { String sourceUrn, String destinationUrn ->
 When(~'I upload (.*) to (.*)') { String sourceUrn, String destination ->
     resetRequest()
     get("repository/upload/source/${sourceUrn}/destination/${destination}")
+}
+
+When(~'I use operation in file (.*)') { String filePath ->
+    resetRequest()
+    request.contentType(ContentType.TEXT)
+    request.body(new ClassPathResource(filePath).file.text)
+
+    post("repository/ops")
 }
 
 When(~'I ask for delta for (.*) for start date (.*) and end date (.*)') { urn, sdate, edate ->

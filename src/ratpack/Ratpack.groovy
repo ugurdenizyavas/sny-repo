@@ -166,10 +166,30 @@ ratpack {
                             }
                         }
                     }
-            ) subscribe {
-                response.status(202)
-                render json(status: 202, message: "accepted")
-            }
+            ).subscribe(([
+                    onCompleted: {
+                    },
+                    onNext     : { result ->
+                        //unparsable json returns groovy NullObject so we need to check null object
+                        if (result.equals(null)) {
+                            response.status(400)
+                            render json(
+                                    status: 400
+                            )
+                        } else {
+                            response.status(200)
+                            render json(
+                                    status: 200
+                            )
+                        }
+                    },
+                    onError    :
+                            {
+                                Exception e ->
+                                    response.status(404)
+                                    render json([status: 404, message: e.message])
+                            }
+            ] as Subscriber))
         }
 
         get("repository/zip/:urn") {
