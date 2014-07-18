@@ -28,9 +28,11 @@ class DeltaServiceTest {
         deltaService = new DeltaService(basePath: TEST_FOLDER_PATH)
         new File(TEST_FOLDER_PATH).delete()
 
-        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme".getBytes(), ISODateUtils.toISODate("1971-01-01T00:00:00.000Z"))
-        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1baep"), "deneme2".getBytes(), ISODateUtils.toISODate("1980-01-01T00:00:00.000Z"))
-        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1ba54"), "deneme3".getBytes(), ISODateUtils.toISODate("1990-01-01T00:00:00.000Z"))
+        repoService.with {
+            write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme".getBytes(), ISODateUtils.toISODate("1971-01-01T00:00:00.000Z"))
+            write(new URNImpl("urn:flix_sku:global:en_gb:xel1baep"), "deneme2".getBytes(), ISODateUtils.toISODate("1980-01-01T00:00:00.000Z"))
+            write(new URNImpl("urn:flix_sku:global:en_gb:xel1ba54"), "deneme3".getBytes(), ISODateUtils.toISODate("1990-01-01T00:00:00.000Z"))
+        }
     }
 
     @Test

@@ -35,11 +35,8 @@ class DeltaService {
         try {
             def result = Files.newDirectoryStream(Paths.get("${basePath}${urn.toPath()}"), [
                     accept: { Path path ->
-                        def startDate = sdate ? sdate.millis : 0L
-                        def endDate = edate ? edate.millis : DateTime.now().millis
-
                         def lastModified = path.toFile().lastModified()
-                        lastModified >= startDate && lastModified < endDate
+                        lastModified >= sdate ? sdate.millis : 0L && lastModified < edate ? edate.millis : DateTime.now().millis
                     }
             ] as DirectoryStream.Filter<Path>
             ).collect { path ->
