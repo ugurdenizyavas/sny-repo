@@ -27,15 +27,13 @@ class RepoServiceTest {
 
     @Test
     void writeRegularFile() {
-        def urn = new URNImpl("urn:flix_sku:global:en_gb:xel1bu")
-        repoService.write(urn, "content".bytes, null)
+        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "content".bytes, null)
         assertFile "/flix_sku/global/en_gb/xel1bu", "content"
     }
 
     @Test
     void writeRegularFileWithExtension() {
-        def urn = new URNImpl("urn:flix_sku:global:en_gb:xel1bu.json")
-        repoService.write(urn, "content".bytes, null)
+        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu.json"), "content".bytes, null)
         assertFile "/flix_sku/global/en_gb/xel1bu.json", "content"
     }
 
@@ -52,12 +50,15 @@ class RepoServiceTest {
 
     @Test
     void shouldZipRepoWithUrn() {
-        FileUtils.writeFile(Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1ba"), "content".bytes, true, true)
-        FileUtils.writeFile(Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1bu"), "content".bytes, true, true)
-        def zipResult = repoService.zip(new URNImpl("urn:flix_sku:global:en_gb"))
+        FileUtils.with {
+            writeFile(Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1ba"), "content".bytes, true, true)
+            writeFile(Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1bu"), "content".bytes, true, true)
+        }
 
-        assertEquals Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1ba"), zipResult.getTracked()[0]
-        assertEquals Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1bu"), zipResult.getTracked()[1]
+        repoService.zip(new URNImpl("urn:flix_sku:global:en_gb")).with {
+            assertEquals Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1ba"), getTracked()[0]
+            assertEquals Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1bu"), getTracked()[1]
+        }
     }
 
     @Test(expected = FileNotFoundException.class)

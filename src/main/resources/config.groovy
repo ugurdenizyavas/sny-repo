@@ -1,3 +1,5 @@
+package com.sony.ebs.octopus3.microservices.reposervice
+
 import org.springframework.context.support.PropertySourcesPlaceholderConfigurer
 
 beans {

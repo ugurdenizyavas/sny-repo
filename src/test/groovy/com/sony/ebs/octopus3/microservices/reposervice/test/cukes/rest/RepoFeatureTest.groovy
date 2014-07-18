@@ -1,16 +1,17 @@
-package com.sony.ebs.octopus3.microservices.reposervice.test.cukes
+package com.sony.ebs.octopus3.microservices.reposervice.test.cukes.rest
 
 import com.jayway.restassured.http.ContentType
-import cucumber.api.PendingException
+import com.sony.ebs.octopus3.commons.urn.URNImpl
 import cucumber.api.groovy.EN
 import cucumber.api.groovy.Hooks
 import groovyx.net.http.URIBuilder
-import org.codehaus.jackson.map.JsonMappingException
 import org.codehaus.jackson.map.ObjectMapper
 import org.springframework.core.io.ClassPathResource
 import ratpack.groovy.test.LocalScriptApplicationUnderTest
 import ratpack.groovy.test.TestHttpClient
 import ratpack.groovy.test.TestHttpClients
+
+import java.nio.file.Paths
 
 this.metaClass.mixin(Hooks)
 this.metaClass.mixin(EN)
@@ -52,16 +53,20 @@ Given(~'I delete (.*)') { String urn ->
 
 When(~'I write (.*) for content (.*) with current date') { String urn, String content ->
     resetRequest()
-    request.contentType(ContentType.TEXT)
-    request.body(content)
+    request.with {
+        contentType(ContentType.TEXT)
+        body(content)
+    }
 
     post("repository/file/${urn}")
 }
 
 When(~'I write (.*) for content (.*) as if in date (.*)') { String urn, String content, String updateDate ->
     resetRequest()
-    request.contentType(ContentType.TEXT)
-    request.body(content)
+    request.with {
+        contentType(ContentType.TEXT)
+        body(content)
+    }
 
     def uri = new URIBuilder("//repository/file/${urn}")
     uri.addQueryParam("updateDate", updateDate == "null" ? null : updateDate)
@@ -90,18 +95,26 @@ When(~'I upload (.*) to (.*)') { String sourceUrn, String destination ->
 
 When(~'I use operation in file (.*)') { String filePath ->
     resetRequest()
-    request.contentType(ContentType.TEXT)
-    request.body(new ClassPathResource(filePath).file.text)
+    request.with {
+        contentType(ContentType.TEXT)
+        body(new ClassPathResource(filePath).file.text)
+    }
 
     post("repository/ops")
 }
 
 When(~'I ask for delta for (.*) for start date (.*) and end date (.*)') { urn, sdate, edate ->
     resetRequest()
-    def uri = new URIBuilder("//repository/delta/${urn}")
-    uri.addQueryParam("sdate", sdate == "null" ? null : sdate)
-    uri.addQueryParam("edate", edate == "null" ? null : edate)
-    get(uri.toString())
+    get(
+            new URIBuilder("//repository/delta/${urn}").with {
+                addQueryParam("sdate", sdate == "null" ? null : sdate)
+                addQueryParam("edate", edate == "null" ? null : edate)
+            }.toString()
+    )
+}
+
+When(~'I wait for (.*) seconds') { seconds ->
+    Thread.sleep(seconds as Integer)
 }
 
 //=======================================
@@ -133,6 +146,12 @@ Then(~'Delta response is (.*)') { String responseBody ->
     compareData responseBody, response.body.asString()
 }
 
+Then(~'File is at (.*) and its content is (.*)') { String path, String content ->
+    resetRequest()
+    get("repository/file/${new URNImpl(null, Paths.get(path))}")
+
+}
+
 //=======================================
 // HELPER METHODS
 //=======================================
@@ -143,8 +162,7 @@ compareJsons = { String json1, String json2 ->
 
 validateJson = { String content ->
     try {
-        def object = objectMapper.readTree(content)
-        assert object != null: "Incoming response content seems to be empty. It is " + content
+        assert objectMapper.readTree(content) != null: "Incoming response content seems to be empty. It is " + content
     } catch (Exception e) {
         assert false: "Incoming response is not a json document. It is " + content
     }
@@ -161,8 +179,7 @@ compareData = { data1, data2 ->
 
 isJson = { String content ->
     try {
-        def object = objectMapper.readTree(content)
-        return object != null
+        return objectMapper.readTree(content) != null
     } catch (Exception e) {
         return false
     }

@@ -13,7 +13,7 @@ class SpringConfig {
 
     @Bean
     public static PropertySourcesPlaceholderConfigurer propertySourcesPlaceholderConfigurer() {
-        return new PropertySourcesPlaceholderConfigurer();
+        new PropertySourcesPlaceholderConfigurer();
     }
 
 }

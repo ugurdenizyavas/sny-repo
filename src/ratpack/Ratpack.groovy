@@ -64,7 +64,7 @@ ratpack {
             render json(status: 200, message: "Welcome to Repo Service")
         }
 
-        get("repository/healthCheck") {
+        get("repository/healthcheck") {
             def params = [:]
 
             params.enabled = request.queryParams.enabled
@@ -89,16 +89,6 @@ ratpack {
                     render json(status: 404, message: "App is down!")
                 }
             }
-        }
-
-        get("repository/healthCheck/down") {
-            monitoringService.down()
-            render json(status: 200, message: "App is down for the eyes of LB!")
-        }
-
-        get("repository/healthCheck/up") {
-            monitoringService.up()
-            render json(status: 200, message: "App is up for the eyes of LB!")
         }
 
         //Repo Service
