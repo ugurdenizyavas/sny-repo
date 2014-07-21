@@ -96,6 +96,7 @@ test { systemProperty('environment', System.getProperty('environment')) }
 
 dependencies {
     compile "com.sony.ebs.octopus3:octopus3-commons:1.1-SNAPSHOT"
+    compile 'com.sony.ebs.octopus3:octopus3-commons-ratpack:1.0-SNAPSHOT'
 
     compile "org.springframework:spring-core:4.0.5.RELEASE"
     compile "org.springframework:spring-beans:4.0.5.RELEASE"

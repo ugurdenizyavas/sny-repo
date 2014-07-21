@@ -1,5 +1,7 @@
 import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.process.ProcessIdImpl
+import com.sony.ebs.octopus3.commons.ratpack.handlers.ErrorHandler
+import com.sony.ebs.octopus3.commons.ratpack.handlers.HealthCheckHandler
 import com.sony.ebs.octopus3.commons.urn.URNCreationException
 import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.SpringConfig
@@ -13,9 +15,9 @@ import com.sony.ebs.octopus3.microservices.reposervice.business.upload.RepoUploa
 import org.slf4j.Logger
 import org.slf4j.LoggerFactory
 import org.springframework.context.annotation.AnnotationConfigApplicationContext
+import ratpack.error.ClientErrorHandler
 import ratpack.error.ServerErrorHandler
 import ratpack.exec.Fulfiller
-import ratpack.handling.Context
 import ratpack.jackson.Jackson
 import ratpack.jackson.JacksonModule
 import ratpack.rx.RxRatpack
@@ -28,22 +30,18 @@ import static ratpack.jackson.Jackson.json
 import static ratpack.rx.RxRatpack.observe
 
 Logger log = LoggerFactory.getLogger("ratpack");
-ServerErrorHandler defaultErrorHandler = [
-        error: { Context context, Exception exception ->
-            log.error "error", exception
-            exception.printStackTrace()
-            context.render "sorry"
-        }
-] as ServerErrorHandler
 
 ratpack {
 
     RepoService repoService
     DeltaService deltaService
     MonitoringService monitoringService
+    HealthCheckHandler healthCheckHandler
 
     bindings {
         add new JacksonModule()
+        bind ClientErrorHandler, new ErrorHandler()
+        bind ServerErrorHandler, new ErrorHandler()
 
         bind ServerErrorHandler, defaultErrorHandler
         init {
@@ -54,6 +52,7 @@ ratpack {
             repoService = ctx.getBean RepoService.class
             deltaService = ctx.getBean DeltaService.class
             monitoringService = ctx.getBean MonitoringService.class
+            healthCheckHandler = new HealthCheckHandler(monitoringService: new MonitoringService())
 
             Jackson
         }
@@ -64,32 +63,7 @@ ratpack {
             render json(status: 200, message: "Welcome to Repo Service")
         }
 
-        get("repository/healthcheck") {
-            def params = [:]
-
-            params.enabled = request.queryParams.enabled
-
-            if (params.enabled) {
-                def action = params.enabled.toBoolean()
-                if (action) {
-                    monitoringService.up()
-                    response.status(200)
-                    render json(status: 200, message: "App is up for the eyes of LB!")
-                } else {
-                    monitoringService.down()
-                    response.status(200)
-                    render json(status: 200, message: "App is down for the eyes of LB!")
-                }
-            } else {
-                if (monitoringService.checkStatus()) {
-                    response.status(200)
-                    render json(status: 200, message: "Ticking!")
-                } else {
-                    response.status(404)
-                    render json(status: 404, message: "App is down!")
-                }
-            }
-        }
+        get("repository/healthcheck", healthCheckHandler)
 
         //Repo Service
         handler("repository/file/:urn") {
