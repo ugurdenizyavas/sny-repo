@@ -32,21 +32,26 @@ class DeltaService {
      * @return urns of result files
      */
     def delta(URN urn, DateTime sdate, DateTime edate) {
-        try {
-            def result = Files.newDirectoryStream(Paths.get("${basePath}${urn.toPath()}"), [
-                    accept: { Path path ->
-                        def startDate = sdate ? sdate.millis : 0L
-                        def endDate = edate ? edate.millis : DateTime.now().millis
+        if (urn != null) {
+            try {
+                Files.newDirectoryStream(Paths.get("${basePath}${urn.toPath()}"), [
+                        accept: { Path path ->
+                            //TODO: simplify below
+                            def startDate = sdate ? sdate.millis : 0L
+                            def endDate = edate ? edate.millis : DateTime.now().millis
 
-                        def lastModified = path.toFile().lastModified()
-                        lastModified >= startDate && lastModified < endDate
-                    }
-            ] as DirectoryStream.Filter<Path>
-            ).collect { path ->
-                new URNImpl(Paths.get(basePath), path).toString()
-            }.flatten()
-            result
-        } catch (IOException e) {
+                            def lastModified = path.toFile().lastModified()
+                            lastModified >= startDate && lastModified < endDate
+                        }
+                ] as DirectoryStream.Filter<Path>
+                ).collect { path ->
+                    new URNImpl(Paths.get(basePath), path).toString()
+                }.flatten()
+            } catch (IOException e) {
+                log.error("Delta cannot be evaluated due to errors", e)
+                []
+            }
+        } else {
             log.error("Delta cannot be evaluated due to errors", e)
             []
         }
