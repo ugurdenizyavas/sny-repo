@@ -43,6 +43,7 @@ apply plugin: "groovy"
 apply plugin: "idea"
 apply plugin: "nexus"
 apply plugin: "com.github.johnrengelman.shadow"
+apply plugin: 'maven-publish'
 
 //======================================================================
 // CONFIGURATIONS
@@ -76,7 +77,20 @@ idea {
     }
 }
 
+run { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
+run { systemProperty('environment', System.getProperty('environment')) }
+test { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
+test { systemProperty('environment', System.getProperty('environment')) }
+
+//======================================================================
+// PACKAGING SHADOWJAR
+// 1) Upload snapshots: gradle publishShadowPublicationToSnapshotsRepository
+// 2) Upload releases: gradle publishShadowPublicationToReleasesRepository
+//======================================================================
+
 shadowJar {
+    baseName = "${project.name}-app"
+    classifier = group
     transform(AppendingTransformer) {
         resource = "META-INF/spring.handlers"
     }
@@ -85,10 +99,32 @@ shadowJar {
     }
 }
 
-run { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
-run { systemProperty('environment', System.getProperty('environment')) }
-test { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
-test { systemProperty('environment', System.getProperty('environment')) }
+publishing {
+    publications {
+        shadow(MavenPublication) {
+            from components.shadow
+            artifactId = "${project.name}-app"
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username project.getProperty('nexusUsername')
+                password project.getProperty('nexusPassword')
+            }
+            name = "releases"
+            url = "https://mvn.sony-europe.com/content/repositories/releases"
+        }
+        maven {
+            credentials {
+                username project.getProperty('nexusUsername')
+                password project.getProperty('nexusPassword')
+            }
+            name = "snapshots"
+            url = "https://mvn.sony-europe.com/content/repositories/snapshots"
+        }
+    }
+}
 
 //======================================================================
 // DEPENDENCIES
@@ -96,7 +132,6 @@ test { systemProperty('environment', System.getProperty('environment')) }
 
 dependencies {
     compile "com.sony.ebs.octopus3:octopus3-commons:1.1-SNAPSHOT"
-    compile 'com.sony.ebs.octopus3:octopus3-commons-ratpack:1.0-SNAPSHOT'
 
     compile "org.springframework:spring-core:4.0.5.RELEASE"
     compile "org.springframework:spring-beans:4.0.5.RELEASE"
@@ -140,6 +175,7 @@ dependencies {
 
 //======================================================================
 // TASKS
+// Usage: gradle cucumber
 //======================================================================
 
 task cucumber(type: JavaExec) {
@@ -155,7 +191,8 @@ task wrapper(type: Wrapper) {
 }
 
 //======================================================================
-// DEPLOY ARTIFACTS
+// DEPLOY ARTIFACTS (SOURCE, JAVADOC, JAR)
+// Usage: gradle upload
 //======================================================================
 
 nexus {
