@@ -173,6 +173,9 @@ ratpack {
                                 case OperationEnum.COPY:
                                     repoService.copy new URNImpl(parameters.get("source")), new URNImpl(parameters.get("destination"))
                                     break
+                                case OperationEnum.DELETE:
+                                    repoService.delete new URNImpl(parameters.get("source"))
+                                    break
                             }
                         }
                     }
