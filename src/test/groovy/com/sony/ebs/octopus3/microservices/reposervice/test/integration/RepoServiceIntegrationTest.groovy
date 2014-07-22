@@ -5,6 +5,7 @@ import com.sony.ebs.octopus3.commons.file.FileUtils
 import groovyx.net.http.URIBuilder
 import org.junit.After
 import org.junit.Before
+import org.junit.BeforeClass
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource
 import ratpack.groovy.test.LocalScriptApplicationUnderTest
@@ -29,6 +30,11 @@ class RepoServiceIntegrationTest {
     LocalScriptApplicationUnderTest aut
     @Delegate
     TestHttpClient client
+
+    @BeforeClass
+    static void doBefore() {
+        System.setProperty("environment", "integration-test")
+    }
 
     @Before
     void before() {
