@@ -1,6 +1,7 @@
 package com.sony.ebs.octopus3.microservices.reposervice.handlers
 
 import com.sony.ebs.octopus3.commons.process.ProcessIdImpl
+import com.sony.ebs.octopus3.commons.urn.URNCreationException
 import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.business.RepoService
 import groovy.util.logging.Slf4j
@@ -28,26 +29,26 @@ class DeleteHandler extends GroovyHandler {
         context.with {
             def params = [:]
 
+            params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+            activity.info("Request to delete with processId: ${params.processId.toString}")
             try {
-                params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
-                activity.info("Request to delete with processId: ${params.processId}")
                 params.urn = new URNImpl(pathTokens.urn)
-
-                observe(
-                        blocking {
-                            repoService.delete params.urn
-                        }
-                ) subscribe { result ->
-                    activity.info "Request to delete with processId: ${params.processId} OK."
-                    response.status(200)
-                    render json(status: 200, processId: params.processId, response: "OK", deletedFiles: result.filesTracked.collect {
-                        it.toString()
-                    }, failedFiles: result.filesFailed.collect { it.toString() })
-                }
-            } catch (Exception e) {
-                activity.warn "Request to delete with processId: ${params.processId} rejected.", e
+            } catch (URNCreationException e) {
+                activity.warn "Request to delete with processId: ${params.processId.toString} rejected.", e
                 response.status(400)
                 render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
+            }
+
+            observe(
+                    blocking {
+                        repoService.delete params.urn
+                    }
+            ) subscribe { result ->
+                activity.info "Request to delete with processId: ${params.processId.toString} OK."
+                response.status(200)
+                render json(status: 200, processId: params.processId, response: "OK", deletedFiles: result.tracked.collect {
+                    it.toString()
+                }, failedFiles: result.failed.collect { it.toString() })
             }
 
         }

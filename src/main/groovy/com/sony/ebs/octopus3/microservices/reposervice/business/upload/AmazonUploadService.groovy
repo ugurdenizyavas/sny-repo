@@ -16,11 +16,11 @@ import org.springframework.stereotype.Component
 @Component
 class AmazonUploadService {
 
-    final def accessKeyId = "AKIAJDSMP4FH74HDUXYQ"
+    final def accessKeyId = "AKIAJ5L6DQY2UZBBVMYQ"
     final
-    def secretAccessKey = "1CDE2390B90F8451B53EDA896AB918F98A2D0BE6A0B44639C70EC2175D6DAD851D49EB561FA2235609A315CB80B6FD45"
-    final def bucketName = "vendorfeeds-uk"
-    final def uploadPath = "sony-products/dropbox/UK"
+    def secretAccessKey = "6BD39073F27D4DF86B796632DCB7F9C2833A183FE8E297CA8A35C239E8744402FCC999457B1AB4917CDB44E266398B11"
+    final def bucketName = "sony-products"
+    final def uploadPath = "dropbox/Sony\\u0020Test\\u0020Folder"
 
     @Value('${amazon.s3.proxyHost}')
     String proxyHostParam
@@ -35,6 +35,8 @@ class AmazonUploadService {
 
     void upload(file, destination) {
 
+        log.debug "Amazon feed upload with proxyHost: ${proxyHostParam}, proxyPort: ${proxyPortParam}, proxyUsername: ${proxyUsernameParam}, proxyPassword: ${proxyPasswordParam} and connectionTimeout:${connectionTimeoutParam}"
+
         //TODO: Add multi destination feature
         new AmazonS3Client(new BasicAWSCredentials(accessKeyId, secretAccessKey),
                 new ClientConfiguration(
@@ -46,12 +48,11 @@ class AmazonUploadService {
                 )
         ).with {
             try {
+                log.info "Sending feed to amazon with bucketName:${bucketName} and uploadPath:${uploadPath}"
                 putObject(new PutObjectRequest(bucketName, uploadPath + File.separator + file.name, file))
             } catch (Exception e) {
-                return false
+                log.error "Cannot send feed to amazon", e
             }
-
-            return true
         }
 
     }

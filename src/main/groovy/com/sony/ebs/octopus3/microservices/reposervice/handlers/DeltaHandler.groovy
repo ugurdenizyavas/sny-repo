@@ -1,10 +1,14 @@
 package com.sony.ebs.octopus3.microservices.reposervice.handlers
 
+import com.sony.ebs.octopus3.commons.date.DateConversionException
 import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.process.ProcessIdImpl
+import com.sony.ebs.octopus3.commons.urn.URN
+import com.sony.ebs.octopus3.commons.urn.URNCreationException
 import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.business.DeltaService
 import groovy.util.logging.Slf4j
+import org.joda.time.DateTime
 import org.springframework.beans.factory.annotation.Autowired
 import org.springframework.stereotype.Component
 import ratpack.exec.Fulfiller
@@ -30,30 +34,31 @@ class DeltaHandler extends GroovyHandler {
         context.with {
             def params = [:]
             params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
-            activity.info("Request to delta with processId: ${params.processId}")
+            activity.info("Request to delta with processId: ${params.processId.toString}")
 
             try {
                 params.urn = new URNImpl(pathTokens.urn)
                 params.sdate = request.queryParams.sdate ? ISODateUtils.toISODate(request.queryParams.sdate) : null
                 params.edate = request.queryParams.edate ? ISODateUtils.toISODate(request.queryParams.edate) : null
-
-                observe(
-                        promise { Fulfiller fulfiller ->
-                            Thread.start {
-                                fulfiller.success(
-                                        deltaService.delta(params.urn, params.sdate, params.edate)
-                                )
-                            }
-                        }
-                ) subscribe { result ->
-                    activity.info "Request to delta with processId: ${params.processId} OK."
-                    response.status(200)
-                    render json(status: 200, processId: params.processId, response: "OK", results: result)
-                }
-            } catch (Exception e) {
-                activity.warn "Request to delta with processId: ${params.processId} rejected."
+            } catch (URNCreationException | DateConversionException e) {
+                activity.warn "Request to delta with processId: ${params.processId.toString} rejected."
                 response.status(400)
                 render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
+                return
+            }
+
+            observe(
+                    promise { Fulfiller fulfiller ->
+                        Thread.start {
+                            fulfiller.success(
+                                    deltaService.delta(params.urn as URN, params.sdate as DateTime, params.edate as DateTime)
+                            )
+                        }
+                    }
+            ) subscribe { result ->
+                activity.info "Request to delta with processId: ${params.processId.toString} OK."
+                response.status(200)
+                render json(status: 200, processId: params.processId, response: "OK", results: result)
             }
         }
     }

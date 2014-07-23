@@ -34,18 +34,18 @@ class OpsHandler extends GroovyHandler {
 
             def params = [:]
             params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
-            activity.info("Request to ops with processId: ${params.processId}")
+            activity.info("Request to ops with processId: ${params.processId.toString}")
 
             params.recipe = request.body.bytes
 
             if (!params.recipe) {
-                activity.warn "Request to ops with processId: ${params.processId} rejected."
+                activity.warn "Request to ops with processId: ${params.processId.toString} rejected."
                 response.status(400)
                 render json(status: 400, processId: params.processId, response: "rejected", message: "request body is empty")
             } else {
                 observe(
                         blocking {
-                            OpsParser.parse(new String(params.recipe)).each { Operation operation ->
+                            OpsParser.parse(new String(params.recipe as byte[])).each { Operation operation ->
                                 def parameters = operation.parameters
                                 switch (operation.methodName) {
                                     case OperationEnum.ZIP:
@@ -66,20 +66,26 @@ class OpsHandler extends GroovyHandler {
                         onNext     : { result ->
                             //unparsable json returns groovy NullObject so we need to check null object
                             if (result.equals(null)) {
-                                activity.warn "Request to ops with processId: ${params.processId} rejected."
+                                activity.warn "Request to ops with processId: ${params.processId.toString} rejected."
                                 response.status(400)
                                 render json(status: 400, processId: params.processId, response: "rejected", message: "ops is unparsable")
                             } else {
-                                activity.info "Request to ops with processId: ${params.processId} ok."
+                                activity.info "Request to ops with processId: ${params.processId.toString} ok."
                                 response.status(200)
                                 render json(status: 200, processId: params.processId, response: "OK")
                             }
                         },
                         onError    : {
                             Exception e ->
-                                activity.warn "Request to ops with processId: ${params.processId} not found."
-                                response.status(404)
-                                render json(status: 404, processId: params.processId, response: "not found", message: e.message)
+                                if (e instanceof FileNotFoundException) {
+                                    activity.warn "Request to ops with processId: ${params.processId.toString} not found.", e
+                                    response.status(404)
+                                    render json([status: 404, processId: params.processId, response: "not found", message: e.message])
+                                } else {
+                                    activity.warn "Request to ops with processId: ${params.processId.toString} server error."
+                                    response.status(500)
+                                    render json([status: 500, processId: params.processId, response: "server error", message: e.message])
+                                }
                         }
                 ] as Subscriber))
             }

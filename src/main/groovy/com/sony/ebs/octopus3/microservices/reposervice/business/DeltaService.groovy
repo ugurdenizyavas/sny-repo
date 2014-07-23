@@ -32,16 +32,21 @@ class DeltaService {
      * @return urns of result files
      */
     def delta(URN urn, DateTime sdate, DateTime edate) {
+        def startDate = sdate ? sdate.millis : 0L
+        def endDate = edate ? edate.millis : DateTime.now().millis
+        log.error "Delta is evaluated for urn: ${urn} startDate: ${startDate} and endDate: ${endDate}"
         if (urn != null) {
             try {
                 Files.newDirectoryStream(Paths.get("${basePath}${urn.toPath()}"), [
                         accept: { Path path ->
-                            //TODO: simplify below
-                            def startDate = sdate ? sdate.millis : 0L
-                            def endDate = edate ? edate.millis : DateTime.now().millis
-
                             def lastModified = path.toFile().lastModified()
-                            lastModified >= startDate && lastModified < endDate
+                            def accept = lastModified >= startDate && lastModified < endDate
+                            if (accept) {
+                                log.debug "File ${path} with lastModifiedTime ${lastModified} is accepted"
+                            } else {
+                                log.debug "File ${path} with lastModifiedTime ${lastModified} is rejected"
+                            }
+                            accept
                         }
                 ] as DirectoryStream.Filter<Path>
                 ).collect { path ->

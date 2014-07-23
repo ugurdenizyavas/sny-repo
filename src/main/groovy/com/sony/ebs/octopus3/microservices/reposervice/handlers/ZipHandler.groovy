@@ -1,6 +1,7 @@
 package com.sony.ebs.octopus3.microservices.reposervice.handlers
 
 import com.sony.ebs.octopus3.commons.process.ProcessIdImpl
+import com.sony.ebs.octopus3.commons.urn.URN
 import com.sony.ebs.octopus3.commons.urn.URNCreationException
 import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.business.RepoService
@@ -32,38 +33,45 @@ class ZipHandler extends GroovyHandler {
             def params = [:]
 
             params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
-            activity.info("Request to zip with processId: ${params.processId}")
-
+            activity.info("Request to zip with processId: ${params.processId.toString}")
             try {
                 params.urn = new URNImpl(pathTokens.urn)
-
-                observe(
-                        blocking {
-                            repoService.zip params.urn
-                        }
-                ).subscribe(([
-                        onCompleted: {
-                        },
-                        onNext     : { result ->
-                            activity.info "Request to zip with processId: ${params.processId} created."
-                            response.status(201)
-                            render json(
-                                    status: 201, processId: params.processId, response: "created",
-                                    zippedFiles: result.collect { it.toString() },
-                                    zipPath: params.urn.toPath() + ZIP_EXTENSION
-                            )
-                        },
-                        onError    : { Exception e ->
-                            activity.warn "Request to zip with processId: ${params.processId} not found.", e
-                            response.status(404)
-                            render json([status: 404, processId: params.processId, response: "not found", message: e.message])
-                        }
-                ] as Subscriber))
             } catch (URNCreationException e) {
-                activity.warn "Request to zip with processId: ${params.processId} rejected.", e
+                activity.warn "Request to zip with processId: ${params.processId.toString} rejected.", e
                 response.status(400)
                 render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
+                return
             }
+
+            observe(
+                    blocking {
+                        repoService.zip params.urn as URN
+                    }
+            ).subscribe(([
+                    onCompleted: {
+                    },
+                    onNext     : { result ->
+                        activity.info "Request to zip with processId: ${params.processId.toString} created."
+                        response.status(201)
+                        render json(
+                                status: 201, processId: params.processId, response: "created",
+                                zippedFiles: result.collect { it.toString() },
+                                zipPath: params.urn.toPath() + ZIP_EXTENSION
+                        )
+                    },
+                    onError    : {
+                        Exception e ->
+                            if (e instanceof FileNotFoundException) {
+                                activity.warn "Request to zip with processId: ${params.processId.toString} not found.", e
+                                response.status(404)
+                                render json([status: 404, processId: params.processId, response: "not found", message: e.message])
+                            } else {
+                                activity.warn "Request to zip with processId: ${params.processId.toString} server error."
+                                response.status(500)
+                                render json([status: 500, processId: params.processId, response: "server error", message: e.message])
+                            }
+                    }
+            ] as Subscriber))
         }
     }
 
