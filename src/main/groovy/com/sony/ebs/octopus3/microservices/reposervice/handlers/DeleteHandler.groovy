@@ -16,8 +16,7 @@ import static ratpack.rx.RxRatpack.observe
  * author: TRYavasU
  * date: 22/07/2014
  */
-
-@Slf4j
+@Slf4j(value = "activity")
 @Component
 class DeleteHandler extends GroovyHandler {
 
@@ -30,23 +29,27 @@ class DeleteHandler extends GroovyHandler {
             def params = [:]
 
             try {
-                params.urn = new URNImpl(pathTokens.urn)
                 params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+                activity.info("Request to delete with processId: ${params.processId}")
+                params.urn = new URNImpl(pathTokens.urn)
+
+                observe(
+                        blocking {
+                            repoService.delete params.urn
+                        }
+                ) subscribe { result ->
+                    activity.info "Request to delete with processId: ${params.processId} accepted."
+                    response.status(202)
+                    render json(status: 202, deletedFiles: result.filesTracked.collect {
+                        it.toString()
+                    }, failedFiles: result.filesFailed.collect { it.toString() })
+                }
             } catch (Exception e) {
+                activity.warn "Request to delete with processId: ${params.processId} rejected.", e
                 response.status(400)
                 render json(status: 400, message: "rejected")
             }
 
-            observe(
-                    blocking {
-                        repoService.delete params.urn
-                    }
-            ) subscribe { result ->
-                response.status(202)
-                render json(status: 202, deletedFiles: result.filesTracked.collect {
-                    it.toString()
-                }, failedFiles: result.filesFailed.collect { it.toString() })
-            }
         }
     }
 

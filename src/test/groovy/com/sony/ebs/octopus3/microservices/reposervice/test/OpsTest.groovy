@@ -1,8 +1,8 @@
 package com.sony.ebs.octopus3.microservices.reposervice.test
 
-import com.sony.ebs.octopus3.microservices.reposervice.business.Operation
-import com.sony.ebs.octopus3.microservices.reposervice.business.OperationEnum
-import com.sony.ebs.octopus3.microservices.reposervice.business.OpsParser
+import com.sony.ebs.octopus3.microservices.reposervice.handlers.operation.Operation
+import com.sony.ebs.octopus3.microservices.reposervice.handlers.operation.OperationEnum
+import com.sony.ebs.octopus3.microservices.reposervice.handlers.operation.OpsParser
 import org.junit.Test
 import org.springframework.core.io.ClassPathResource
 

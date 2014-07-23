@@ -18,8 +18,7 @@ import static ratpack.rx.RxRatpack.observe
  * author: TRYavasU
  * date: 22/07/2014
  */
-
-@Slf4j
+@Slf4j(value = "activity")
 @Component
 class DeltaHandler extends GroovyHandler {
 
@@ -30,27 +29,31 @@ class DeltaHandler extends GroovyHandler {
     protected void handle(GroovyContext context) {
         context.with {
             def params = [:]
+            params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+            activity.info("Request to delta with processId: ${params.processId}")
 
             try {
                 params.urn = new URNImpl(pathTokens.urn)
                 params.sdate = request.queryParams.sdate ? ISODateUtils.toISODate(request.queryParams.sdate) : null
                 params.edate = request.queryParams.edate ? ISODateUtils.toISODate(request.queryParams.edate) : null
-                params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+
+                observe(
+                        promise { Fulfiller fulfiller ->
+                            Thread.start {
+                                fulfiller.success(
+                                        deltaService.delta(params.urn, params.sdate, params.edate)
+                                )
+                            }
+                        }
+                ) subscribe { result ->
+                    activity.info "Request to delta with processId: ${params.processId} accepted."
+                    response.status(202)
+                    render json(results: result)
+                }
             } catch (Exception e) {
+                activity.warn "Request to delta with processId: ${params.processId} rejected."
                 response.status(400)
                 render json(status: 400, message: "rejected")
-            }
-
-            observe(
-                    promise { Fulfiller fulfiller ->
-                        Thread.start {
-                            fulfiller.success(
-                                    deltaService.delta(params.urn, params.sdate, params.edate)
-                            )
-                        }
-                    }
-            ) subscribe { result ->
-                render json(results: result)
             }
         }
     }

@@ -18,8 +18,7 @@ import static ratpack.rx.RxRatpack.observe
  * author: TRYavasU
  * date: 22/07/2014
  */
-
-@Slf4j
+@Slf4j(value = "activity")
 @Component
 class UploadHandler extends GroovyHandler {
 
@@ -32,30 +31,34 @@ class UploadHandler extends GroovyHandler {
             def params = [:]
 
             try {
+                params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+                activity.info("Request to upload with processId: ${params.processId}")
                 params.sourceUrn = new URNImpl(pathTokens.source)
                 params.destination = RepoUploadEnum.valueOf(pathTokens.destination)
-                params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+
+                observe(
+                        blocking {
+                            repoService.upload params.sourceUrn, params.destination
+                        }
+                ).subscribe(([
+                        onCompleted: {
+                        },
+                        onNext     : {
+                            activity.info "Request to upload with processId: ${params.processId} accepted."
+                            response.status(202)
+                            render json(status: 202, message: "accepted")
+                        },
+                        onError    : { Exception e ->
+                            activity.warn "Request to upload with processId: ${params.processId} not found."
+                            response.status(404)
+                            render json([status: 404, message: e.message])
+                        }
+                ] as Subscriber))
             } catch (Exception e) {
+                activity.warn "Request to upload with processId: ${params.processId} rejected."
                 response.status(400)
                 render json(status: 400, message: "rejected")
             }
-
-            observe(
-                    blocking {
-                        repoService.upload params.sourceUrn, params.destination
-                    }
-            ).subscribe(([
-                    onCompleted: {
-                    },
-                    onNext     : {
-                        response.status(202)
-                        render json(status: 202, message: "accepted")
-                    },
-                    onError    : { Exception e ->
-                        response.status(404)
-                        render json([status: 404, message: e.message])
-                    }
-            ] as Subscriber))
         }
     }
 

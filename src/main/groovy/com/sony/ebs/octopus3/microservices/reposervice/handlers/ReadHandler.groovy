@@ -19,8 +19,7 @@ import static ratpack.rx.RxRatpack.observe
  * author: TRYavasU
  * date: 22/07/2014
  */
-
-@Slf4j
+@Slf4j(value = "activity")
 @Component
 class ReadHandler extends GroovyHandler {
 
@@ -33,28 +32,32 @@ class ReadHandler extends GroovyHandler {
             def params = [:]
 
             try {
-                params.urn = new URNImpl(pathTokens.urn)
                 params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+                activity.info("Request to read with processId: ${params.processId}")
+                params.urn = new URNImpl(pathTokens.urn)
+
+                observe(
+                        blocking {
+                            repoService.read(params.urn)
+                        }
+                ).subscribe(([
+                        onCompleted: {
+                        },
+                        onNext     : { Path result ->
+                            activity.info "Request to read with processId: ${params.processId} OK."
+                            response.sendFile context, result
+                        },
+                        onError    : { Exception e ->
+                            activity.warn "Request to read with processId: ${params.processId} not found."
+                            response.status(404)
+                            render json([status: 404, message: e.message])
+                        }
+                ] as Subscriber<Path>))
             } catch (Exception e) {
+                activity.warn "Request to read with processId: ${params.processId} rejected."
                 response.status(400)
                 render json(status: 400, message: "rejected")
             }
-
-            observe(
-                    blocking {
-                        repoService.read(params.urn)
-                    }
-            ).subscribe(([
-                    onCompleted: {
-                    },
-                    onNext     : { Path result ->
-                        response.sendFile context, result
-                    },
-                    onError    : { Exception e ->
-                        response.status(404)
-                        render json([status: 404, message: e.message])
-                    }
-            ] as Subscriber<Path>))
         }
     }
 

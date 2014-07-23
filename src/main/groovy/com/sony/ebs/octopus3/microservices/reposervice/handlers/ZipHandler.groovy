@@ -18,7 +18,7 @@ import static ratpack.rx.RxRatpack.observe
  * author: TRYavasU
  * date: 22/07/2014
  */
-@Slf4j
+@Slf4j(value = "activity")
 @Component
 class ZipHandler extends GroovyHandler {
 
@@ -30,35 +30,40 @@ class ZipHandler extends GroovyHandler {
         context.with {
             final def ZIP_EXTENSION = ".zip"
             def params = [:]
+
+            params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+            activity.info("Request to zip with processId: ${params.processId}")
+
             try {
                 params.urn = new URNImpl(pathTokens.urn)
-                params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+
+                observe(
+                        blocking {
+                            repoService.zip params.urn
+                        }
+                ).subscribe(([
+                        onCompleted: {
+                        },
+                        onNext     : { result ->
+                            activity.info "Request to zip with processId: ${params.processId} created."
+                            response.status(201)
+                            render json(
+                                    status: 201,
+                                    zippedFiles: result.collect { it.toString() },
+                                    zipPath: params.urn.toPath() + ZIP_EXTENSION
+                            )
+                        },
+                        onError    : { Exception e ->
+                            activity.warn "Request to zip with processId: ${params.processId} not found.", e
+                            response.status(404)
+                            render json([status: 404, message: e.message])
+                        }
+                ] as Subscriber))
             } catch (URNCreationException e) {
+                activity.warn "Request to zip with processId: ${params.processId} rejected.", e
                 response.status(400)
                 render json(status: 400, message: "rejected")
             }
-
-            observe(
-                    blocking {
-                        repoService.zip params.urn
-                    }
-            ).subscribe(([
-                    onCompleted: {
-                    },
-                    onNext     : { result ->
-                        response.status(201)
-                        render json(
-                                status: 201,
-                                zippedFiles: result.collect { it.toString() },
-                                zipPath: params.urn.toPath() + ZIP_EXTENSION
-                        )
-                    },
-                    onError    : { Exception e ->
-                        response.status(404)
-                        render json([status: 404, message: e.message])
-                    }
-            ] as Subscriber))
-
         }
     }
 

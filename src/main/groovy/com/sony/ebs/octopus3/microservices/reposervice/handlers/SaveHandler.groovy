@@ -17,8 +17,7 @@ import static ratpack.rx.RxRatpack.observe
  * author: TRYavasU
  * date: 22/07/2014
  */
-
-@Slf4j
+@Slf4j(value = "activity")
 @Component
 class SaveHandler extends GroovyHandler {
 
@@ -29,25 +28,28 @@ class SaveHandler extends GroovyHandler {
     protected void handle(GroovyContext context) {
         context.with {
             def params = [:]
+            params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+            activity.info("Request to save with processId: ${params.processId}")
 
             try {
                 params.file = request.body.bytes
                 if (!params.file) new RuntimeException("File parameter is empty")
                 params.urn = new URNImpl(pathTokens.urn)
                 params.updateDate = request.queryParams.updateDate ? ISODateUtils.toISODate(request.queryParams.updateDate) : null
-                params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+
+                observe(
+                        blocking {
+                            repoService.write params.urn, params.file, params.updateDate
+                        }
+                ) subscribe {
+                    activity.info "Request to save with processId: ${params.processId} accepted."
+                    response.status(202)
+                    render json(status: 202, message: "accepted")
+                }
             } catch (Exception e) {
+                activity.warn "Request to save with processId: ${params.processId} rejected."
                 response.status(400)
                 render json(status: 400, message: "rejected")
-            }
-
-            observe(
-                    blocking {
-                        repoService.write params.urn, params.file, params.updateDate
-                    }
-            ) subscribe {
-                response.status(202)
-                render json(status: 202, message: "accepted")
             }
         }
     }
