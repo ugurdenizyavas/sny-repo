@@ -48,7 +48,7 @@ class ZipHandler extends GroovyHandler {
                             activity.info "Request to zip with processId: ${params.processId} created."
                             response.status(201)
                             render json(
-                                    status: 201,
+                                    status: 201, processId: params.processId, response: "created",
                                     zippedFiles: result.collect { it.toString() },
                                     zipPath: params.urn.toPath() + ZIP_EXTENSION
                             )
@@ -56,13 +56,13 @@ class ZipHandler extends GroovyHandler {
                         onError    : { Exception e ->
                             activity.warn "Request to zip with processId: ${params.processId} not found.", e
                             response.status(404)
-                            render json([status: 404, message: e.message])
+                            render json([status: 404, processId: params.processId, response: "not found", message: e.message])
                         }
                 ] as Subscriber))
             } catch (URNCreationException e) {
                 activity.warn "Request to zip with processId: ${params.processId} rejected.", e
                 response.status(400)
-                render json(status: 400, message: "rejected")
+                render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
             }
         }
     }

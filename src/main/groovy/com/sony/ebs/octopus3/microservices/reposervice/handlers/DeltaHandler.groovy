@@ -46,14 +46,14 @@ class DeltaHandler extends GroovyHandler {
                             }
                         }
                 ) subscribe { result ->
-                    activity.info "Request to delta with processId: ${params.processId} accepted."
-                    response.status(202)
-                    render json(results: result)
+                    activity.info "Request to delta with processId: ${params.processId} OK."
+                    response.status(200)
+                    render json(status: 200, processId: params.processId, response: "OK", results: result)
                 }
             } catch (Exception e) {
                 activity.warn "Request to delta with processId: ${params.processId} rejected."
                 response.status(400)
-                render json(status: 400, message: "rejected")
+                render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
             }
         }
     }

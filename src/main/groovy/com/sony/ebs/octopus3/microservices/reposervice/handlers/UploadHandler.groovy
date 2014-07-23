@@ -46,18 +46,18 @@ class UploadHandler extends GroovyHandler {
                         onNext     : {
                             activity.info "Request to upload with processId: ${params.processId} accepted."
                             response.status(202)
-                            render json(status: 202, message: "accepted")
+                            render json(status: 202, processId: params.processId, response: "accepted")
                         },
                         onError    : { Exception e ->
                             activity.warn "Request to upload with processId: ${params.processId} not found."
                             response.status(404)
-                            render json([status: 404, message: e.message])
+                            render json([status: 404, processId: params.processId, response: "not found", message: e.message])
                         }
                 ] as Subscriber))
             } catch (Exception e) {
                 activity.warn "Request to upload with processId: ${params.processId} rejected."
                 response.status(400)
-                render json(status: 400, message: "rejected")
+                render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
             }
         }
     }

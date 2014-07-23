@@ -50,13 +50,13 @@ class ReadHandler extends GroovyHandler {
                         onError    : { Exception e ->
                             activity.warn "Request to read with processId: ${params.processId} not found."
                             response.status(404)
-                            render json([status: 404, message: e.message])
+                            render json([status: 404, processId: params.processId, response: "not found", message: e.message])
                         }
                 ] as Subscriber<Path>))
             } catch (Exception e) {
                 activity.warn "Request to read with processId: ${params.processId} rejected."
                 response.status(400)
-                render json(status: 400, message: "rejected")
+                render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
             }
         }
     }

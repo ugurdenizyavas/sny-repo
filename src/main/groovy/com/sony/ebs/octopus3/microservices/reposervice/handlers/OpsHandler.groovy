@@ -41,7 +41,7 @@ class OpsHandler extends GroovyHandler {
             if (!params.recipe) {
                 activity.warn "Request to ops with processId: ${params.processId} rejected."
                 response.status(400)
-                render json(status: 400, message: "rejected")
+                render json(status: 400, processId: params.processId, response: "rejected", message: "request body is empty")
             } else {
                 observe(
                         blocking {
@@ -68,22 +68,18 @@ class OpsHandler extends GroovyHandler {
                             if (result.equals(null)) {
                                 activity.warn "Request to ops with processId: ${params.processId} rejected."
                                 response.status(400)
-                                render json(
-                                        status: 400
-                                )
+                                render json(status: 400, processId: params.processId, response: "rejected", message: "ops is unparsable")
                             } else {
                                 activity.info "Request to ops with processId: ${params.processId} ok."
                                 response.status(200)
-                                render json(
-                                        status: 200
-                                )
+                                render json(status: 200, processId: params.processId, response: "OK")
                             }
                         },
                         onError    : {
                             Exception e ->
                                 activity.warn "Request to ops with processId: ${params.processId} not found."
                                 response.status(404)
-                                render json([status: 404, message: e.message])
+                                render json(status: 404, processId: params.processId, response: "not found", message: e.message)
                         }
                 ] as Subscriber))
             }
