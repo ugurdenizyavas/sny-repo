@@ -1,3 +1,5 @@
+import com.github.jengelman.gradle.plugins.shadow.transformers.AppendingTransformer
+
 //======================================================================
 // PROJECT
 //======================================================================
@@ -17,8 +19,9 @@ buildscript {
         maven { url "http://oss.jfrog.org/repo" }
     }
     dependencies {
-        classpath "io.ratpack:ratpack-gradle:0.9.5"
+        classpath "io.ratpack:ratpack-gradle:0.9.7-SNAPSHOT"
         classpath "org.gradle.api.plugins:gradle-nexus-plugin:0.7"
+        classpath "com.github.jengelman.gradle.plugins:shadow:1.0.2"
     }
 }
 
@@ -39,6 +42,8 @@ apply plugin: "ratpack-groovy"
 apply plugin: "groovy"
 apply plugin: "idea"
 apply plugin: "nexus"
+apply plugin: "com.github.johnrengelman.shadow"
+apply plugin: 'maven-publish'
 
 //======================================================================
 // CONFIGURATIONS
@@ -72,10 +77,60 @@ idea {
     }
 }
 
-run { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
+test {
+    testLogging {
+        events 'started', 'passed'
+    }
+}
+
+//run { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
 run { systemProperty('environment', System.getProperty('environment')) }
-test { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
+//test { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
 test { systemProperty('environment', System.getProperty('environment')) }
+
+//======================================================================
+// PACKAGING SHADOWJAR
+// 1) Upload snapshots: gradle publishShadowPublicationToSnapshotsRepository
+// 2) Upload releases: gradle publishShadowPublicationToReleasesRepository
+//======================================================================
+
+shadowJar {
+    baseName = "${project.name}-app"
+    classifier = group
+    transform(AppendingTransformer) {
+        resource = "META-INF/spring.handlers"
+    }
+    transform(AppendingTransformer) {
+        resource = "META-INF/spring.schemas"
+    }
+}
+
+publishing {
+    publications {
+        shadow(MavenPublication) {
+            from components.shadow
+            artifactId = "${project.name}-app"
+        }
+    }
+    repositories {
+        maven {
+            credentials {
+                username project.getProperty('nexusUsername')
+                password project.getProperty('nexusPassword')
+            }
+            name = "releases"
+            url = "https://mvn.sony-europe.com/content/repositories/releases"
+        }
+        maven {
+            credentials {
+                username project.getProperty('nexusUsername')
+                password project.getProperty('nexusPassword')
+            }
+            name = "snapshots"
+            url = "https://mvn.sony-europe.com/content/repositories/snapshots"
+        }
+    }
+}
 
 //======================================================================
 // DEPENDENCIES
@@ -83,19 +138,23 @@ test { systemProperty('environment', System.getProperty('environment')) }
 
 dependencies {
     compile "com.sony.ebs.octopus3:octopus3-commons:1.1-SNAPSHOT"
+    compile "com.sony.ebs.octopus3:octopus3-commons-ratpack:1.0-SNAPSHOT"
 
     compile "org.springframework:spring-core:4.0.5.RELEASE"
-    compile "org.springframework:spring-context:4.0.5.RELEASE"
     compile "org.springframework:spring-beans:4.0.5.RELEASE"
+    compile "org.springframework:spring-context:4.0.5.RELEASE"
+    testCompile "org.springframework:spring-test:4.0.5.RELEASE"
 
-    compile "io.ratpack:ratpack-rx:0.9.5"
-    compile "io.ratpack:ratpack-jackson:0.9.5"
+    compile "io.ratpack:ratpack-rx:0.9.7-SNAPSHOT"
+    compile "io.ratpack:ratpack-jackson:0.9.7-SNAPSHOT"
 
-    compile group:"org.slf4j", name:"slf4j-api", version:"1.7.5"
-    compile group:"org.slf4j", name:"jcl-over-slf4j", version:"1.7.5"
-    compile group:"org.slf4j", name:"log4j-over-slf4j", version:"1.7.5"
-    compile group:"ch.qos.logback", name:"logback-core", version:"1.1.2"
-    compile group:"ch.qos.logback", name:"logback-classic", version:"1.1.2"
+    compile "com.github.jengelman.gradle.plugins:shadow:1.0.2"
+
+    compile group: "org.slf4j", name: "slf4j-api", version: "1.7.5"
+    compile group: "org.slf4j", name: "jcl-over-slf4j", version: "1.7.5"
+    compile group: "org.slf4j", name: "log4j-over-slf4j", version: "1.7.5"
+    compile group: "ch.qos.logback", name: "logback-core", version: "1.1.2"
+    compile group: "ch.qos.logback", name: "logback-classic", version: "1.1.2"
 
     compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.5.0', {
         exclude module: "commons-logging"
@@ -124,6 +183,7 @@ dependencies {
 
 //======================================================================
 // TASKS
+// Usage: gradle cucumber
 //======================================================================
 
 task cucumber(type: JavaExec) {
@@ -135,11 +195,12 @@ task cucumber(type: JavaExec) {
 }
 
 task wrapper(type: Wrapper) {
-    gradleVersion = 1.12
+    gradleVersion = 2.0
 }
 
 //======================================================================
-// DEPLOY ARTIFACTS
+// DEPLOY ARTIFACTS (SOURCE, JAVADOC, JAR)
+// Usage: gradle upload
 //======================================================================
 
 nexus {

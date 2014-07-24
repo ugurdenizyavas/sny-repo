@@ -16,6 +16,11 @@
                 "source": "urn:flix_sku:global:en_gb.zip",
                 "destination": "S3"
             }
+        },
+        {
+            "delete": {
+                "source": "urn:flix_sku:global:en_gb.zip"
+            }
         }
     ]
 }

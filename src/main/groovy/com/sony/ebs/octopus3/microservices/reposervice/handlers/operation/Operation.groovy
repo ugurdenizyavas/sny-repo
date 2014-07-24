@@ -1,4 +1,4 @@
-package com.sony.ebs.octopus3.microservices.reposervice.business
+package com.sony.ebs.octopus3.microservices.reposervice.handlers.operation
 
 import groovy.transform.EqualsAndHashCode
 import groovy.transform.ToString
@@ -15,5 +15,5 @@ class Operation {
 }
 
 enum OperationEnum {
-    ZIP, COPY, UPLOAD
+    ZIP, COPY, UPLOAD, DELETE
 }

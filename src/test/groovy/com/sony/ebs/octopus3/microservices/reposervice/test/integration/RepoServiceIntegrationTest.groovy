@@ -27,12 +27,18 @@ class RepoServiceIntegrationTest {
     Path TEST_FOLDER_PATH
 
     LocalScriptApplicationUnderTest aut
+
     @Delegate
     TestHttpClient client
+
+    static {
+        System.setProperty("environment", "integration-test");
+    }
 
     @Before
     void before() {
         def props = new Properties()
+
         new ClassPathResource("integration-test.properties").file.withInputStream {
             stream -> props.load(stream)
         }
@@ -42,6 +48,7 @@ class RepoServiceIntegrationTest {
         if (Files.exists(TEST_FOLDER_PATH)) {
             FileUtils.delete(TEST_FOLDER_PATH)
         }
+        TEST_FOLDER_PATH.toFile().mkdirs()
 
         aut = new LocalScriptApplicationUnderTest()
         client = TestHttpClients.testHttpClient(aut)
@@ -55,9 +62,7 @@ class RepoServiceIntegrationTest {
         }
         post(new URIBuilder("//repository/file/urn:a:b:c").toString())
 
-        assert 202 == response.statusCode
-
-        Thread.sleep(10000)
+        assert 200 == response.statusCode
 
         assertFile("/a/b/c", "content1")
     }
@@ -70,7 +75,7 @@ class RepoServiceIntegrationTest {
         }
         post(new URIBuilder("//repository/file/urn:a:b:c").toString())
 
-        assert 202 == response.statusCode
+        assert 200 == response.statusCode
 
         request.with {
             body(new ClassPathResource("test/integration/file2.txt").file.text)
@@ -78,9 +83,7 @@ class RepoServiceIntegrationTest {
         }
         post(new URIBuilder("//repository/file/urn:a:b:c").toString())
 
-        assert 202 == response.statusCode
-
-        Thread.sleep(10000)
+        assert 200 == response.statusCode
 
         //Assert second file is written
         assertFile("/a/b/c", "content2")
@@ -88,7 +91,17 @@ class RepoServiceIntegrationTest {
 
     void assertFile(relativePath, content) {
         def path = Paths.get("$TEST_FOLDER_PATH${File.separator}${relativePath}")
-        assertTrue "File does not exists in ${path.text}", Files.exists(path)
+        def i = 0
+        def done = false
+        while (i < 30) {
+            if (Files.exists(path)) {
+                done = true
+                break
+            }
+            Thread.sleep(200)
+            i++
+        }
+        assertTrue "File does not exists in ${path.text}", done
         assertEquals "The content of file [${path.text}] is wrong", content, path.readLines().join()
     }
 

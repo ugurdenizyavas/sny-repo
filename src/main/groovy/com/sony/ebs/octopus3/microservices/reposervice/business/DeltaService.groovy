@@ -32,18 +32,31 @@ class DeltaService {
      * @return urns of result files
      */
     def delta(URN urn, DateTime sdate, DateTime edate) {
-        try {
-            def result = Files.newDirectoryStream(Paths.get("${basePath}${urn.toPath()}"), [
-                    accept: { Path path ->
-                        def lastModified = path.toFile().lastModified()
-                        lastModified >= sdate ? sdate.millis : 0L && lastModified < edate ? edate.millis : DateTime.now().millis
-                    }
-            ] as DirectoryStream.Filter<Path>
-            ).collect { path ->
-                new URNImpl(Paths.get(basePath), path).toString()
-            }.flatten()
-            result
-        } catch (IOException e) {
+        def startDate = sdate ? sdate.millis : 0L
+        def endDate = edate ? edate.millis : DateTime.now().millis
+        log.error "Delta is evaluated for urn: ${urn} startDate: ${startDate} and endDate: ${endDate}"
+        if (urn != null) {
+            try {
+                Files.newDirectoryStream(Paths.get("${basePath}${urn.toPath()}"), [
+                        accept: { Path path ->
+                            def lastModified = path.toFile().lastModified()
+                            def accept = lastModified >= startDate && lastModified < endDate
+                            if (accept) {
+                                log.debug "File ${path} with lastModifiedTime ${lastModified} is accepted"
+                            } else {
+                                log.debug "File ${path} with lastModifiedTime ${lastModified} is rejected"
+                            }
+                            accept
+                        }
+                ] as DirectoryStream.Filter<Path>
+                ).collect { path ->
+                    new URNImpl(Paths.get(basePath), path).toString()
+                }.flatten()
+            } catch (IOException e) {
+                log.error("Delta cannot be evaluated due to errors", e)
+                []
+            }
+        } else {
             log.error("Delta cannot be evaluated due to errors", e)
             []
         }
