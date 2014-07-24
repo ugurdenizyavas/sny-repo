@@ -51,7 +51,7 @@ ratpack {
     }
 
     handlers {
-        get("repository/healthcheck", healthCheckHandler)
+        get("healthcheck", healthCheckHandler)
         handler("repository/file/:urn") {
             byMethod {
                 post(saveHandler)
