@@ -36,11 +36,11 @@ class SaveHandler extends GroovyHandler {
         context.with {
             def params = [:]
             params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
-            activity.info("Request to save with processId: ${params.processId.toString}")
+            activity.info("Request to save with processId: ${params.processId.toString()}")
 
             params.file = request.body.bytes
             if (!params.file) {
-                activity.warn "Request to save with processId: ${params.processId.toString} rejected."
+                activity.warn "Request to save with processId: ${params.processId.toString()} rejected."
                 response.status(400)
                 render json(status: 400, response: "rejected", message: "request body is empty")
             } else {
@@ -48,7 +48,7 @@ class SaveHandler extends GroovyHandler {
                     params.urn = new URNImpl(pathTokens.urn)
                     params.updateDate = request.queryParams.updateDate ? ISODateUtils.toISODate(request.queryParams.updateDate) : null
                 } catch (URNCreationException | DateConversionException e) {
-                    activity.warn "Request to save with processId: ${params.processId.toString} rejected."
+                    activity.warn "Request to save with processId: ${params.processId.toString()} rejected."
                     response.status(400)
                     render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
                     return
@@ -62,12 +62,12 @@ class SaveHandler extends GroovyHandler {
                         onCompleted: {
                         },
                         onNext     : { Path result ->
-                            activity.info "Request to save with processId: ${params.processId.toString} accepted."
+                            activity.info "Request to save with processId: ${params.processId.toString()} accepted."
                             response.status(200)
                             render json(status: 200, processId: params.processId, response: "OK")
                         },
                         onError    : { Exception e ->
-                            activity.warn "Request to read with processId: ${params.processId.toString} server error."
+                            activity.warn "Request to read with processId: ${params.processId.toString()} server error."
                             response.status(500)
                             render json([status: 500, processId: params.processId, response: "server error", message: e.message])
                         }

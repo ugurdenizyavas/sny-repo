@@ -33,11 +33,11 @@ class ZipHandler extends GroovyHandler {
             def params = [:]
 
             params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
-            activity.info("Request to zip with processId: ${params.processId.toString}")
+            activity.info("Request to zip with processId: ${params.processId.toString()}")
             try {
                 params.urn = new URNImpl(pathTokens.urn)
             } catch (URNCreationException e) {
-                activity.warn "Request to zip with processId: ${params.processId.toString} rejected.", e
+                activity.warn "Request to zip with processId: ${params.processId.toString()} rejected.", e
                 response.status(400)
                 render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
                 return
@@ -51,7 +51,7 @@ class ZipHandler extends GroovyHandler {
                     onCompleted: {
                     },
                     onNext     : { result ->
-                        activity.info "Request to zip with processId: ${params.processId.toString} created."
+                        activity.info "Request to zip with processId: ${params.processId.toString()} created."
                         response.status(201)
                         render json(
                                 status: 201, processId: params.processId, response: "created",
@@ -62,11 +62,11 @@ class ZipHandler extends GroovyHandler {
                     onError    : {
                         Exception e ->
                             if (e instanceof FileNotFoundException) {
-                                activity.warn "Request to zip with processId: ${params.processId.toString} not found.", e
+                                activity.warn "Request to zip with processId: ${params.processId.toString()} not found.", e
                                 response.status(404)
                                 render json([status: 404, processId: params.processId, response: "not found", message: e.message])
                             } else {
-                                activity.warn "Request to zip with processId: ${params.processId.toString} server error."
+                                activity.warn "Request to zip with processId: ${params.processId.toString()} server error."
                                 response.status(500)
                                 render json([status: 500, processId: params.processId, response: "server error", message: e.message])
                             }

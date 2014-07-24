@@ -32,12 +32,12 @@ class CopyHandler extends GroovyHandler {
             def params = [:]
 
             params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
-            activity.info("Request to copy with processId: ${params.processId.toString}")
+            activity.info("Request to copy with processId: ${params.processId.toString()}")
             try {
                 params.sourceStr = new URNImpl(pathTokens.source)
                 params.destinationStr = new URNImpl(pathTokens.destination)
             } catch (URNCreationException e) {
-                activity.warn "Request to copy with processId: ${params.processId.toString} rejected.", e
+                activity.warn "Request to copy with processId: ${params.processId.toString()} rejected.", e
                 response.status(400)
                 render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
             }
@@ -50,17 +50,17 @@ class CopyHandler extends GroovyHandler {
                     onCompleted: {
                     },
                     onNext     : {
-                        activity.info "Request to copy with processId: ${params.processId.toString} accepted."
+                        activity.info "Request to copy with processId: ${params.processId.toString()} accepted."
                         response.status(202)
                         render json(status: 202, processId: params.processId, response: "accepted")
                     },
                     onError    : { Exception e ->
                         if (e instanceof FileNotFoundException) {
-                            activity.warn "Request to copy with processId: ${params.processId.toString} not found.", e
+                            activity.warn "Request to copy with processId: ${params.processId.toString()} not found.", e
                             response.status(404)
                             render json([status: 404, processId: params.processId, response: "not found", message: e.message])
                         } else {
-                            activity.warn "Request to copy with processId: ${params.processId.toString} server error."
+                            activity.warn "Request to copy with processId: ${params.processId.toString()} server error."
                             response.status(500)
                             render json([status: 500, processId: params.processId, response: "server error", message: e.message])
                         }

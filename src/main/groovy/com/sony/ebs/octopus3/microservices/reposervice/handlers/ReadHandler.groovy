@@ -34,11 +34,11 @@ class ReadHandler extends GroovyHandler {
             def params = [:]
 
             params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
-            activity.info("Request to read with processId: ${params.processId.toString}")
+            activity.info("Request to read with processId: ${params.processId.toString()}")
             try {
                 params.urn = new URNImpl(pathTokens.urn)
             } catch (URNCreationException e) {
-                activity.warn "Request to read with processId: ${params.processId.toString} rejected."
+                activity.warn "Request to read with processId: ${params.processId.toString()} rejected."
                 response.status(400)
                 render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
                 return
@@ -52,17 +52,17 @@ class ReadHandler extends GroovyHandler {
                     onCompleted: {
                     },
                     onNext     : { Path result ->
-                        activity.info "Request to read with processId: ${params.processId.toString} OK."
+                        activity.info "Request to read with processId: ${params.processId.toString()} OK."
                         response.sendFile context, result
                     },
                     onError    : {
                         Exception e ->
                             if (e instanceof FileNotFoundException) {
-                                activity.warn "Request to read with processId: ${params.processId.toString} not found.", e
+                                activity.warn "Request to read with processId: ${params.processId.toString()} not found.", e
                                 response.status(404)
                                 render json([status: 404, processId: params.processId, response: "not found", message: e.message])
                             } else {
-                                activity.warn "Request to read with processId: ${params.processId.toString} server error."
+                                activity.warn "Request to read with processId: ${params.processId.toString()} server error."
                                 response.status(500)
                                 render json([status: 500, processId: params.processId, response: "server error", message: e.message])
                             }

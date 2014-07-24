@@ -30,11 +30,11 @@ class DeleteHandler extends GroovyHandler {
             def params = [:]
 
             params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
-            activity.info("Request to delete with processId: ${params.processId.toString}")
+            activity.info("Request to delete with processId: ${params.processId.toString()}")
             try {
                 params.urn = new URNImpl(pathTokens.urn)
             } catch (URNCreationException e) {
-                activity.warn "Request to delete with processId: ${params.processId.toString} rejected.", e
+                activity.warn "Request to delete with processId: ${params.processId.toString()} rejected.", e
                 response.status(400)
                 render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
             }
@@ -44,7 +44,7 @@ class DeleteHandler extends GroovyHandler {
                         repoService.delete params.urn
                     }
             ) subscribe { result ->
-                activity.info "Request to delete with processId: ${params.processId.toString} OK."
+                activity.info "Request to delete with processId: ${params.processId.toString()} OK."
                 response.status(200)
                 render json(status: 200, processId: params.processId, response: "OK", deletedFiles: result.tracked.collect {
                     it.toString()

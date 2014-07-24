@@ -34,12 +34,12 @@ class OpsHandler extends GroovyHandler {
 
             def params = [:]
             params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
-            activity.info("Request to ops with processId: ${params.processId.toString}")
+            activity.info("Request to ops with processId: ${params.processId.toString()}")
 
             params.recipe = request.body.bytes
 
             if (!params.recipe) {
-                activity.warn "Request to ops with processId: ${params.processId.toString} rejected."
+                activity.warn "Request to ops with processId: ${params.processId.toString()} rejected."
                 response.status(400)
                 render json(status: 400, processId: params.processId, response: "rejected", message: "request body is empty")
             } else {
@@ -66,11 +66,11 @@ class OpsHandler extends GroovyHandler {
                         onNext     : { result ->
                             //unparsable json returns groovy NullObject so we need to check null object
                             if (result.equals(null)) {
-                                activity.warn "Request to ops with processId: ${params.processId.toString} rejected."
+                                activity.warn "Request to ops with processId: ${params.processId.toString()} rejected."
                                 response.status(400)
                                 render json(status: 400, processId: params.processId, response: "rejected", message: "ops is unparsable")
                             } else {
-                                activity.info "Request to ops with processId: ${params.processId.toString} ok."
+                                activity.info "Request to ops with processId: ${params.processId.toString()} ok."
                                 response.status(200)
                                 render json(status: 200, processId: params.processId, response: "OK")
                             }
@@ -78,11 +78,11 @@ class OpsHandler extends GroovyHandler {
                         onError    : {
                             Exception e ->
                                 if (e instanceof FileNotFoundException) {
-                                    activity.warn "Request to ops with processId: ${params.processId.toString} not found.", e
+                                    activity.warn "Request to ops with processId: ${params.processId.toString()} not found.", e
                                     response.status(404)
                                     render json([status: 404, processId: params.processId, response: "not found", message: e.message])
                                 } else {
-                                    activity.warn "Request to ops with processId: ${params.processId.toString} server error."
+                                    activity.warn "Request to ops with processId: ${params.processId.toString()} server error."
                                     response.status(500)
                                     render json([status: 500, processId: params.processId, response: "server error", message: e.message])
                                 }

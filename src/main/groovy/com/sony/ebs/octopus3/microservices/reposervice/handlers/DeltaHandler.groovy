@@ -34,14 +34,14 @@ class DeltaHandler extends GroovyHandler {
         context.with {
             def params = [:]
             params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
-            activity.info("Request to delta with processId: ${params.processId.toString}")
+            activity.info("Request to delta with processId: ${params.processId.toString()}")
 
             try {
                 params.urn = new URNImpl(pathTokens.urn)
                 params.sdate = request.queryParams.sdate ? ISODateUtils.toISODate(request.queryParams.sdate) : null
                 params.edate = request.queryParams.edate ? ISODateUtils.toISODate(request.queryParams.edate) : null
             } catch (URNCreationException | DateConversionException e) {
-                activity.warn "Request to delta with processId: ${params.processId.toString} rejected."
+                activity.warn "Request to delta with processId: ${params.processId.toString()} rejected."
                 response.status(400)
                 render json(status: 400, processId: params.processId, response: "rejected", message: e.message)
                 return
@@ -56,7 +56,7 @@ class DeltaHandler extends GroovyHandler {
                         }
                     }
             ) subscribe { result ->
-                activity.info "Request to delta with processId: ${params.processId.toString} OK."
+                activity.info "Request to delta with processId: ${params.processId.toString()} OK."
                 response.status(200)
                 render json(status: 200, processId: params.processId, response: "OK", results: result)
             }
