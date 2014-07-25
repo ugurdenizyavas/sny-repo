@@ -2,7 +2,7 @@
 
 IP="43.216.132.90"
 PORT="9091"
-PACKAGE="octopus3-repository-service-1.0-SNAPSHOT-Shadow.jar"
+PACKAGE="octopus3-repository-service-app-1.0-SNAPSHOT-Shadow.jar"
 NAME="octopus3-repository-service"
 LOGDIR="/opt/logs/repository"
 ENVIRONMENT="dev"

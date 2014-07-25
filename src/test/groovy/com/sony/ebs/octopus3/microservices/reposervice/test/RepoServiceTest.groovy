@@ -56,8 +56,8 @@ class RepoServiceTest {
         }
 
         repoService.zip(new URNImpl("urn:flix_sku:global:en_gb")).with {
-            assertEquals Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1ba"), getTracked()[0]
-            assertEquals Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1bu"), getTracked()[1]
+            assert getTracked().contains(Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1ba"))
+            assert getTracked().contains(Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1bu"))
         }
     }
 
