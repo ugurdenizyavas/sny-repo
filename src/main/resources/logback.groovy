@@ -36,7 +36,7 @@ createStandardAppender("activityAppender", "activity")
 
 // Create the loggers
 root(defaultLevel, ["consoleAppender", "defaultAppender"])
-logger("activity", INFO, ["activityAppender"])
+logger("activity", DEBUG, ["activityAppender"])
 
 if (environment == "production") {
     root(INFO, ["consoleAppender", "defaultAppender"])
