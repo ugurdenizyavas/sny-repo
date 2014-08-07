@@ -51,6 +51,9 @@ class OpsHandler extends GroovyHandler {
                                     case OperationEnum.ZIP:
                                         repoService.zip new URNImpl(parameters.get("source"))
                                         break
+                                    case OperationEnum.DELETE:
+                                        repoService.delete new URNImpl(parameters.get("source"))
+                                        break
                                     case OperationEnum.UPLOAD:
                                         repoService.upload new URNImpl(parameters.get("source")), RepoUploadEnum.valueOf(parameters.get("destination"))
                                         break
