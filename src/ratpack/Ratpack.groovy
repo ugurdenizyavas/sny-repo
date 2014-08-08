@@ -26,6 +26,7 @@ ratpack {
     SaveHandler saveHandler
     ReadHandler readHandler
     DeleteHandler deleteHandler
+    FileAttributesHandler fileAttributesHandler
 
     bindings {
         add new JacksonModule()
@@ -45,6 +46,7 @@ ratpack {
             saveHandler = ctx.getBean SaveHandler.class
             readHandler = ctx.getBean ReadHandler.class
             deleteHandler = ctx.getBean DeleteHandler.class
+            fileAttributesHandler = ctx.getBean FileAttributesHandler.class
 
             RxRatpack.initialize()
         }
@@ -64,5 +66,6 @@ ratpack {
         get("repository/copy/source/:source/destination/:destination", copyHandler)
         get("repository/upload/source/:source/destination/:destination", uploadHandler)
         get("repository/delta/:urn", deltaHandler)
+        get("repository/fileattributes/:urn", fileAttributesHandler)
     }
 }

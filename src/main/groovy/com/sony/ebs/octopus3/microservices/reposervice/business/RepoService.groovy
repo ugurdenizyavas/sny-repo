@@ -1,5 +1,6 @@
 package com.sony.ebs.octopus3.microservices.reposervice.business
 
+import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.file.FileUtils
 import com.sony.ebs.octopus3.commons.urn.URN
 import com.sony.ebs.octopus3.microservices.reposervice.business.upload.AmazonUploadService
@@ -14,6 +15,7 @@ import java.nio.file.Files
 import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.StandardCopyOption
+import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.FileTime
 
 /**
@@ -128,4 +130,28 @@ class RepoService {
             }
         }
     }
+
+    /**
+     * Returns FileAttributes,which is decomposed from urn, of the file and checks if it exists
+     * @param urn (eg. urn:flix_sku:global:en_gb:xel1bu) (mandatory)
+     * @return FileAttributes of the file
+     */
+    FileAttributes getFileAttributes(URN urn) {
+        def getDateAsIsoString = { FileTime fileTime ->
+            ISODateUtils.toISODateString(new DateTime(fileTime.toMillis()))
+        }
+
+        Path path = read(urn)
+        def basicFileAttributes = Files.readAttributes(path, BasicFileAttributes.class)
+
+        FileAttributes fileAttributes = new FileAttributes()
+        fileAttributes.lastModifiedTime = getDateAsIsoString basicFileAttributes?.lastModifiedTime()
+        fileAttributes.creationTime = getDateAsIsoString basicFileAttributes?.creationTime()
+        fileAttributes.lastAccessTime = getDateAsIsoString basicFileAttributes?.lastAccessTime()
+        fileAttributes.directory = basicFileAttributes?.directory
+        fileAttributes.regularFile = basicFileAttributes?.regularFile
+        fileAttributes.size = basicFileAttributes?.size()
+        fileAttributes
+    }
+
 }
