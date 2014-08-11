@@ -140,10 +140,10 @@ dependencies {
     compile "com.sony.ebs.octopus3:octopus3-commons:1.1-SNAPSHOT"
     compile "com.sony.ebs.octopus3:octopus3-commons-ratpack:1.0-SNAPSHOT"
 
-    compile "org.springframework:spring-core:4.0.5.RELEASE"
-    compile "org.springframework:spring-beans:4.0.5.RELEASE"
-    compile "org.springframework:spring-context:4.0.5.RELEASE"
-    testCompile "org.springframework:spring-test:4.0.5.RELEASE"
+    compile "org.springframework:spring-core:$springVersion"
+    compile "org.springframework:spring-beans:$springVersion"
+    compile "org.springframework:spring-context:$springVersion"
+    testCompile "org.springframework:spring-test:$springVersion"
 
     compile "io.ratpack:ratpack-rx:$ratpackVersion"
     compile "io.ratpack:ratpack-jackson:$ratpackVersion"

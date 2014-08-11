@@ -138,20 +138,19 @@ class RepoService {
      */
     FileAttributes getFileAttributes(URN urn) {
         def getDateAsIsoString = { FileTime fileTime ->
-            ISODateUtils.toISODateString(new DateTime(fileTime.toMillis()))
+            ISODateUtils.toISODateString(new DateTime(fileTime?.toMillis()))
         }
 
-        Path path = read(urn)
-        def basicFileAttributes = Files.readAttributes(path, BasicFileAttributes.class)
+        def basicFileAttributes = Files.readAttributes(read(urn), BasicFileAttributes.class)
 
-        FileAttributes fileAttributes = new FileAttributes()
-        fileAttributes.lastModifiedTime = getDateAsIsoString basicFileAttributes?.lastModifiedTime()
-        fileAttributes.creationTime = getDateAsIsoString basicFileAttributes?.creationTime()
-        fileAttributes.lastAccessTime = getDateAsIsoString basicFileAttributes?.lastAccessTime()
-        fileAttributes.directory = basicFileAttributes?.directory
-        fileAttributes.regularFile = basicFileAttributes?.regularFile
-        fileAttributes.size = basicFileAttributes?.size()
-        fileAttributes
+        new FileAttributes(
+                lastModifiedTime: getDateAsIsoString(basicFileAttributes?.lastModifiedTime()),
+                creationTime: getDateAsIsoString(basicFileAttributes?.creationTime()),
+                lastAccessTime: getDateAsIsoString(basicFileAttributes?.lastAccessTime()),
+                directory: basicFileAttributes?.directory,
+                regularFile: basicFileAttributes?.regularFile,
+                size: basicFileAttributes?.size()
+        )
     }
 
 }

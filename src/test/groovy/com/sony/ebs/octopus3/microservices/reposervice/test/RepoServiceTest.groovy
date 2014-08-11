@@ -1,7 +1,9 @@
 package com.sony.ebs.octopus3.microservices.reposervice.test
 
+import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.file.FileUtils
 import com.sony.ebs.octopus3.commons.urn.URNImpl
+import com.sony.ebs.octopus3.microservices.reposervice.business.FileAttributes
 import com.sony.ebs.octopus3.microservices.reposervice.business.RepoService
 import org.junit.After
 import org.junit.Before
@@ -11,6 +13,8 @@ import java.nio.file.Files
 import java.nio.file.Paths
 
 import static org.junit.Assert.assertEquals
+import static org.junit.Assert.assertFalse
+import static org.junit.Assert.assertNotNull
 import static org.junit.Assert.assertTrue
 
 class RepoServiceTest {
@@ -79,6 +83,27 @@ class RepoServiceTest {
     void shouldGiveErrorIfFileNotExists() {
         FileUtils.writeFile(Paths.get("$TEST_FOLDER_PATH/flix_sku/global/en_gb/xel1ba"), "content".bytes, true, true)
         repoService.copy(new URNImpl("urn:flix_sku:global:en_gb:nofile"), new URNImpl("urn:flix_sku:global:en_gb:dsch300w"))
+    }
+
+    @Test
+    void readFileAttributes() {
+        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme".getBytes(), ISODateUtils.toISODate("1971-01-01T00:00:00.000Z"))
+        FileAttributes fileAttributes = repoService.getFileAttributes(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"))
+
+        assertNotNull fileAttributes.creationTime
+        assertFalse fileAttributes.directory
+        assertNotNull fileAttributes.lastAccessTime
+        assertTrue fileAttributes.regularFile
+        assert fileAttributes.lastModifiedTime, "1971-01-01T00:00:00.000Z"
+        assert fileAttributes.size, 6
+    }
+
+
+    @Test(expected = FileNotFoundException.class)
+    void readFileAttributesFileNotFound() {
+        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme".getBytes(), ISODateUtils.toISODate("1971-01-01T00:00:00.000Z"))
+
+        repoService.getFileAttributes(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"))
     }
 
     @After

@@ -65,7 +65,7 @@ class FileAttributesHandler extends GroovyHandler {
                                 render json([status: 500, processId: params.processId, response: "server error", message: e.message])
                             }
                     }
-            ] as Subscriber<Path>))
+            ] as Subscriber<FileAttributes>))
         }
     }
 
