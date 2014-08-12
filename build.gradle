@@ -15,23 +15,26 @@ buildscript {
     repositories {
         mavenLocal()
         maven { url "https://mvn.sony-europe.com/content/groups/global" }
+        maven { url "http://repo.spring.io/libs-release-remote" }
+        maven { url 'http://repo.spring.io/plugins-release' }
+        maven { url 'http://oss.jfrog.org/repo' }
+        jcenter()
         mavenCentral()
-        maven { url "http://oss.jfrog.org/repo" }
     }
     dependencies {
         classpath "io.ratpack:ratpack-gradle:$ratpackVersion"
-        classpath "org.gradle.api.plugins:gradle-nexus-plugin:0.7.1"
-        classpath "com.github.jengelman.gradle.plugins:shadow:1.0.2"
+        classpath 'org.gradle.api.plugins:gradle-nexus-plugin:0.7.1'
+        classpath 'com.github.jengelman.gradle.plugins:shadow:1.0.2'
     }
 }
 
 repositories {
     mavenLocal()
-    maven { url "https://mvn.sony-europe.com/content/groups/global" }
+    maven { url 'https://mvn.sony-europe.com/content/groups/global' }
+    maven { url 'http://repo.spring.io/libs-release' }
+    maven { url 'http://repo.springsource.org/repo' }
+    maven { url 'http://oss.jfrog.org/repo' }
     mavenCentral()
-    maven { url "http://repo.spring.io/libs-release" }
-    maven { url "http://oss.jfrog.org/repo" }
-    maven { url "http://repo.springsource.org/repo" }
 }
 
 //======================================================================
@@ -43,31 +46,31 @@ apply plugin: "groovy"
 apply plugin: "idea"
 apply plugin: "nexus"
 apply plugin: "com.github.johnrengelman.shadow"
-apply plugin: 'maven-publish'
 
 //======================================================================
 // CONFIGURATIONS
 //======================================================================
 
-ext.javaLanguageLevel = 1.7
-
-sourceCompatibility = "$javaLanguageLevel"
-targetCompatibility = "$javaLanguageLevel"
+sourceCompatibility = '1.7'
+targetCompatibility = '1.7'
 defaultTasks 'clean', 'build'
+applicationDefaultJvmArgs = [
+        "-Dio.netty.eventLoopThreads=20"
+]
 
 configurations {
-    cucumberRuntime {
-        extendsFrom testRuntime
-    }
     all {
-        exclude module: "groovy"
+        exclude module: 'groovy'
+    }
+    sshAntTask {
+        logging.level = LogLevel.INFO
     }
 }
 
 idea {
     project {
-        jdkName "1.7"
-        languageLevel "1.7"
+        jdkName '1.7'
+        languageLevel '1.7'
     }
     module {
         inheritOutputDirs = false
@@ -77,59 +80,24 @@ idea {
     }
 }
 
-test {
-    testLogging {
-        events 'started', 'passed'
-    }
-}
-
-//run { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
-run { systemProperty('environment', System.getProperty('environment')) }
-//test { systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir')) }
-test { systemProperty('environment', System.getProperty('environment')) }
-
-//======================================================================
-// PACKAGING SHADOWJAR
-// 1) Upload snapshots: gradle publishShadowPublicationToSnapshotsRepository
-// 2) Upload releases: gradle publishShadowPublicationToReleasesRepository
-//======================================================================
-
 shadowJar {
     baseName = "${project.name}-app"
     classifier = group
     transform(AppendingTransformer) {
-        resource = "META-INF/spring.handlers"
+        resource = 'META-INF/spring.handlers'
     }
     transform(AppendingTransformer) {
-        resource = "META-INF/spring.schemas"
+        resource = 'META-INF/spring.schemas'
     }
 }
 
-publishing {
-    publications {
-        shadow(MavenPublication) {
-            from components.shadow
-            artifactId = "${project.name}-app"
-        }
-    }
-    repositories {
-        maven {
-            credentials {
-                username project.getProperty('nexusUsername')
-                password project.getProperty('nexusPassword')
-            }
-            name = "releases"
-            url = "https://mvn.sony-europe.com/content/repositories/releases"
-        }
-        maven {
-            credentials {
-                username project.getProperty('nexusUsername')
-                password project.getProperty('nexusPassword')
-            }
-            name = "snapshots"
-            url = "https://mvn.sony-europe.com/content/repositories/snapshots"
-        }
-    }
+run {
+    systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir'))
+    systemProperty('environment', System.getProperty('environment'))
+}
+test {
+    systemProperty('environment', 'test')
+    exclude 'com/sony/ebs/octopus3/amazon/benchmark/**'
 }
 
 //======================================================================
@@ -137,77 +105,52 @@ publishing {
 //======================================================================
 
 dependencies {
+    sshAntTask 'org.apache.ant:ant-jsch:1.9.2'
     compile "com.sony.ebs.octopus3:octopus3-commons:1.1-SNAPSHOT"
     compile "com.sony.ebs.octopus3:octopus3-commons-ratpack:1.0-SNAPSHOT"
+    compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
+    compile 'commons-io:commons-io:2.4'
 
+    // SPRING
     compile "org.springframework:spring-core:$springVersion"
-    compile "org.springframework:spring-beans:$springVersion"
     compile "org.springframework:spring-context:$springVersion"
-    testCompile "org.springframework:spring-test:$springVersion"
+    compile "org.springframework:spring-beans:$springVersion"
 
+    testCompile 'junit:junit:4.11'
+
+    // RATPACK
+    testCompile 'org.spockframework:spock-core:0.7-groovy-2.0', {
+        exclude module: 'groovy-all'
+    }
     compile "io.ratpack:ratpack-rx:$ratpackVersion"
     compile "io.ratpack:ratpack-jackson:$ratpackVersion"
 
-    compile "com.github.jengelman.gradle.plugins:shadow:1.0.2"
+    compile 'org.slf4j:slf4j-api:1.7.5'
+    compile 'org.slf4j:jcl-over-slf4j:1.7.5'
+    compile 'ch.qos.logback:logback-core:1.1.2'
+    compile 'ch.qos.logback:logback-classic:1.1.2'
 
-    compile group: "org.slf4j", name: "slf4j-api", version: "1.7.5"
-    compile group: "org.slf4j", name: "jcl-over-slf4j", version: "1.7.5"
-    compile group: "org.slf4j", name: "log4j-over-slf4j", version: "1.7.5"
-    compile group: "ch.qos.logback", name: "logback-core", version: "1.1.2"
-    compile group: "ch.qos.logback", name: "logback-classic", version: "1.1.2"
-
-    compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1', {
-        exclude module: "commons-logging"
-        exclude module: "xml-apis"
-        exclude module: "groovy"
-    }
     compile "com.amazonaws:aws-java-sdk:1.2.9"
 
-    springloaded "org.springsource.springloaded:springloaded-core:1.1.4"
-
-    testCompile "org.spockframework:spock-core:0.7-groovy-2.0", {
-        exclude module: "groovy-all"
-    }
-    testCompile 'junit:junit:4.11'
-    testCompile 'info.cukes:cucumber-junit:1.1.7'
-    testCompile 'info.cukes:cucumber-groovy:1.1.7'
-
-    /*
-    In order to work around a really flagrant bug ( http://issues.gradle.org/browse/GRADLE-732 )
-    You have to create a configuration that includes the jar.archivePath (the jar.archivePath is created by the java plugin)
-    and give it the same name as the cucumberRuntime configuration, or name it something different and have the cucumberRuntime
-    configuration extend from it as well. VERY ANNOYING BUG!
-    */
-    cucumberRuntime files("${jar.archivePath}")
 }
 
 //======================================================================
 // TASKS
-// Usage: gradle cucumber
 //======================================================================
-
-task cucumber(type: JavaExec) {
-    dependsOn assemble
-    main = "cucumber.api.cli.Main"
-    classpath = files(configurations.cucumberRuntime, sourceSets.test.runtimeClasspath)
-    args = ['-f', 'pretty', '--glue', 'src/test/groovy', 'src/test/resources/cukes']
-    systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir'))
-}
 
 task wrapper(type: Wrapper) {
     gradleVersion = 2.0
 }
 
 //======================================================================
-// DEPLOY ARTIFACTS (SOURCE, JAVADOC, JAR)
-// Usage: gradle upload
+// DEPLOY ARTIFACTS
 //======================================================================
 
 nexus {
     attachSources = true
     attachTests = false
-    attachJavadoc = true
+    attachJavadoc = false
     sign = false
-    repositoryUrl = "https://mvn.sony-europe.com/content/repositories/releases"
-    snapshotRepositoryUrl = "https://mvn.sony-europe.com/content/repositories/snapshots"
+    repositoryUrl = 'https://mvn.sony-europe.com/content/repositories/releases'
+    snapshotRepositoryUrl = 'https://mvn.sony-europe.com/content/repositories/snapshots'
 }
