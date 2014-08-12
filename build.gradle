@@ -117,6 +117,8 @@ dependencies {
     compile "org.springframework:spring-beans:$springVersion"
 
     testCompile 'junit:junit:4.11'
+    testCompile 'info.cukes:cucumber-junit:1.1.7'
+    testCompile 'info.cukes:cucumber-groovy:1.1.7'
 
     // RATPACK
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0', {

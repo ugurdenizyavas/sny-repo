@@ -20,6 +20,16 @@ class OpsTest {
         assert result[0], new Operation(methodName: OperationEnum.ZIP, parameters: [source: "flix_sku:global:en_gb"])
         assert result[1], new Operation(methodName: OperationEnum.COPY, parameters: [source: "flix_sku:global:en_gb", destination: "urn:archive:flix_sku:global:en_gb.zip"])
         assert result[2], new Operation(methodName: OperationEnum.UPLOAD, parameters: [source: "flix_sku:global:en_gb", destination: "S3"])
+        assert result[3], new Operation(methodName: OperationEnum.DELETE, parameters: [source: "flix_sku:global:en_gb"])
+    }
+
+    @Test
+    void testOperations2() {
+        def result = OpsParser.parse(new ClassPathResource("ops/ops2.json").file.text)
+
+        assert result.size(), 3
+        assert result[0], new Operation(methodName: OperationEnum.ZIP, parameters: [source: "flix_sku:global:en_gb"])
+        assert result[1], new Operation(methodName: OperationEnum.COPY, parameters: [source: "flix_sku:global:en_gb", destination: "urn:archive:flix_sku:global:en_gb.zip"])
         assert result[2], new Operation(methodName: OperationEnum.DELETE, parameters: [source: "flix_sku:global:en_gb"])
     }
 }
