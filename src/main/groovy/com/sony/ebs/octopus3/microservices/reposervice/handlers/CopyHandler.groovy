@@ -19,7 +19,7 @@ import static ratpack.rx.RxRatpack.observe
  * author: TRYavasU
  * date: 22/07/2014
  */
-@Slf4j(value = "activity")
+@Slf4j(value = "activity", category = "activity")
 @Component
 class CopyHandler extends GroovyHandler {
 

@@ -18,7 +18,7 @@ import java.nio.file.Path
 import static ratpack.jackson.Jackson.json
 import static ratpack.rx.RxRatpack.observe
 
-@Slf4j(value = "activity")
+@Slf4j(value = "activity", category = "activity")
 @Component
 class FileAttributesHandler extends GroovyHandler {
 
