@@ -124,8 +124,8 @@ dependencies {
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0', {
         exclude module: 'groovy-all'
     }
-    compile "io.ratpack:ratpack-rx:$ratpackVersion"
-    compile "io.ratpack:ratpack-jackson:$ratpackVersion"
+    compile ratpack.dependency("jackson")
+    compile ratpack.dependency("rx")
 
     compile 'org.slf4j:slf4j-api:1.7.5'
     compile 'org.slf4j:jcl-over-slf4j:1.7.5'
