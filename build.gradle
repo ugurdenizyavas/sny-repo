@@ -94,6 +94,7 @@ shadowJar {
 run {
     systemProperty('storage.root', System.getProperty('storage.root') ?: System.getProperty('java.io.tmpdir'))
     systemProperty('environment', System.getProperty('environment'))
+    systemProperty('logback.configurationFile', System.getProperty('logback.configurationFile'))
 }
 test {
     systemProperty('environment', 'test')
