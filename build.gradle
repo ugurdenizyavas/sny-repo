@@ -82,6 +82,7 @@ idea {
 
 shadowJar {
     baseName = "${project.name}-app"
+    archiveName = "${baseName}.jar"
     classifier = group
     transform(AppendingTransformer) {
         resource = 'META-INF/spring.handlers'
@@ -186,7 +187,7 @@ task devRelease() {
             logger.info("#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n\tUPLOADING TO {}\n#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", host)
             try {
                 ant.scp(
-                        file: file("build/libs/${project.name}-app-$version-Shadow.jar"),
+                        file: file("build/libs/${project.name}-app.jar"),
                         todir: "${devReleaseUser}@${host}:${devUploadPath}",
                         password: password,
                         trust: true,
@@ -245,7 +246,7 @@ task tqaRelease() {
             logger.info("#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n\tUPLOADING TO {}\n#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", host)
             try {
                 ant.scp(
-                        file: file("build/libs/${project.name}-app-$version-Shadow.jar"),
+                        file: file("build/libs/${project.name}-app.jar"),
                         todir: "${tqaReleaseUser}@${host}:${tqaUploadPath}",
                         password: password,
                         trust: true,
@@ -304,7 +305,7 @@ task prdRelease() {
             logger.info("#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#\n\tUPLOADING TO {}\n#~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~#", host)
             try {
                 ant.scp(
-                        file: file("build/libs/${project.name}-app-$version-Shadow.jar"),
+                        file: file("build/libs/${project.name}-app.jar"),
                         todir: "${prdReleaseUser}@${host}:${prdUploadPath}",
                         password: password,
                         trust: true,
