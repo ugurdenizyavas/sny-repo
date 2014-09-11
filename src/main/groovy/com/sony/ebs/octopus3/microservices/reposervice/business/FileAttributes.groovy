@@ -2,6 +2,8 @@ package com.sony.ebs.octopus3.microservices.reposervice.business
 
 class FileAttributes {
 
+    String urn
+
     String lastModifiedTime
 
     String lastAccessTime
@@ -13,4 +15,7 @@ class FileAttributes {
     boolean directory
 
     long size
+
+    def contentFiles
+
 }

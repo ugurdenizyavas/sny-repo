@@ -3,6 +3,7 @@ package com.sony.ebs.octopus3.microservices.reposervice.business
 import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.file.FileUtils
 import com.sony.ebs.octopus3.commons.urn.URN
+import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.business.upload.AmazonUploadService
 import com.sony.ebs.octopus3.microservices.reposervice.business.upload.RepoUploadEnum
 import groovy.util.logging.Slf4j
@@ -137,20 +138,36 @@ class RepoService {
      * @return FileAttributes of the file
      */
     FileAttributes getFileAttributes(URN urn) {
-        def getDateAsIsoString = { FileTime fileTime ->
-            ISODateUtils.toISODateString(new DateTime(fileTime?.toMillis()))
-        }
+        def path = read(urn)
 
-        def basicFileAttributes = Files.readAttributes(read(urn), BasicFileAttributes.class)
+        def basicFileAttributes = Files.readAttributes(path, BasicFileAttributes.class)
 
+        createFileAttributes(urn, basicFileAttributes, path)
+    }
+
+    private FileAttributes createFileAttributes(URN urn, BasicFileAttributes basicFileAttributes, Path path) {
         new FileAttributes(
+                urn: urn,
                 lastModifiedTime: getDateAsIsoString(basicFileAttributes?.lastModifiedTime()),
                 creationTime: getDateAsIsoString(basicFileAttributes?.creationTime()),
                 lastAccessTime: getDateAsIsoString(basicFileAttributes?.lastAccessTime()),
                 directory: basicFileAttributes?.directory,
                 regularFile: basicFileAttributes?.regularFile,
-                size: basicFileAttributes?.size()
+                size: basicFileAttributes?.size(),
+                contentFiles: basicFileAttributes?.directory ? fileList(path) : null
         )
     }
+
+    def fileList(path) {
+        Files.newDirectoryStream(path).collect { content ->
+            def basicFileAttributes = Files.readAttributes(content, BasicFileAttributes.class)
+            createFileAttributes(new URNImpl(Paths.get(basePath), content), basicFileAttributes, content)
+        }
+    }
+
+    def getDateAsIsoString = { FileTime fileTime ->
+        ISODateUtils.toISODateString(new DateTime(fileTime?.toMillis()))
+    }
+
 
 }
