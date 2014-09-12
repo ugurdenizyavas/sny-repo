@@ -142,10 +142,10 @@ class RepoService {
 
         def basicFileAttributes = Files.readAttributes(path, BasicFileAttributes.class)
 
-        createFileAttributes(urn, basicFileAttributes, path)
+        createFileAttributes(urn, basicFileAttributes, path, true)
     }
 
-    private FileAttributes createFileAttributes(URN urn, BasicFileAttributes basicFileAttributes, Path path) {
+    private FileAttributes createFileAttributes(URN urn, BasicFileAttributes basicFileAttributes, Path path, boolean inDepth) {
         new FileAttributes(
                 urn: urn,
                 lastModifiedTime: getDateAsIsoString(basicFileAttributes?.lastModifiedTime()),
@@ -154,14 +154,14 @@ class RepoService {
                 directory: basicFileAttributes?.directory,
                 regularFile: basicFileAttributes?.regularFile,
                 size: basicFileAttributes?.size(),
-                contentFiles: basicFileAttributes?.directory ? fileList(path) : null
+                contentFiles: inDepth ? ((basicFileAttributes?.directory) ? fileList(path) : null) : "Unchecked"
         )
     }
 
     def fileList(path) {
         Files.newDirectoryStream(path).collect { content ->
             def basicFileAttributes = Files.readAttributes(content, BasicFileAttributes.class)
-            createFileAttributes(new URNImpl(Paths.get(basePath), content), basicFileAttributes, content)
+            createFileAttributes(new URNImpl(Paths.get(basePath), content), basicFileAttributes, content, false)
         }
     }
 

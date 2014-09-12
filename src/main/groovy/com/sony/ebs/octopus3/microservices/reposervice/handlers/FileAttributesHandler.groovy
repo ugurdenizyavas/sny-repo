@@ -13,12 +13,11 @@ import ratpack.groovy.handling.GroovyContext
 import ratpack.groovy.handling.GroovyHandler
 import rx.Subscriber
 
-import java.nio.file.Path
-
 import static ratpack.jackson.Jackson.json
 import static ratpack.rx.RxRatpack.observe
 
 @Slf4j(value = "activity", category = "activity")
+@Slf4j(value = "log", category = "log")
 @Component
 class FileAttributesHandler extends GroovyHandler {
 
@@ -61,6 +60,7 @@ class FileAttributesHandler extends GroovyHandler {
                                 render json([status: 404, processId: params.processId, response: "not found", message: e.message])
                             } else {
                                 activity.warn "Request to read with processId: ${params.processId.toString()} server error."
+                                log.error "Error in file attributes:", e
                                 response.status(500)
                                 render json([status: 500, processId: params.processId, response: "server error", message: e.message])
                             }
