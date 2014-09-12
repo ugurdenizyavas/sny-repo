@@ -106,7 +106,7 @@ class RepoServiceTest {
         assertNotNull fileAttributes.creationTime
         assertTrue fileAttributes.directory
         assertNotNull fileAttributes.lastAccessTime
-        assertTrue fileAttributes.regularFile
+        assertFalse fileAttributes.regularFile
         assert fileAttributes.lastModifiedTime, "1971-01-01T00:00:00.000Z"
         assert fileAttributes.size, 6
     }
