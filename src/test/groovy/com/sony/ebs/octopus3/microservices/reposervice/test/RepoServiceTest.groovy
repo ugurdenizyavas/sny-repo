@@ -3,7 +3,6 @@ package com.sony.ebs.octopus3.microservices.reposervice.test
 import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.file.FileUtils
 import com.sony.ebs.octopus3.commons.urn.URNImpl
-import com.sony.ebs.octopus3.microservices.reposervice.business.FileAttributes
 import com.sony.ebs.octopus3.microservices.reposervice.business.RepoService
 import org.junit.After
 import org.junit.Before
@@ -88,7 +87,7 @@ class RepoServiceTest {
     @Test
     void readFileAttributes() {
         repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme".getBytes(), ISODateUtils.toISODate("1971-01-01T00:00:00.000Z"))
-        FileAttributes fileAttributes = repoService.getFileAttributes(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"))
+        def fileAttributes = repoService.getFileAttributes(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"))
 
         assertNotNull fileAttributes.creationTime
         assertFalse fileAttributes.directory
@@ -101,14 +100,13 @@ class RepoServiceTest {
     @Test
     void readFolderAttributes() {
         repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme".getBytes(), ISODateUtils.toISODate("1971-01-01T00:00:00.000Z"))
-        FileAttributes fileAttributes = repoService.getFileAttributes(new URNImpl("urn:flix_sku:global:en_gb"))
+        def fileAttributes = repoService.getFileAttributes(new URNImpl("urn:flix_sku:global:en_gb"))
 
         assertNotNull fileAttributes.creationTime
         assertTrue fileAttributes.directory
         assertNotNull fileAttributes.lastAccessTime
         assertFalse fileAttributes.regularFile
         assert fileAttributes.lastModifiedTime, "1971-01-01T00:00:00.000Z"
-        assert fileAttributes.size, 6
     }
 
 

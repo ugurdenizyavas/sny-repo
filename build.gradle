@@ -109,7 +109,7 @@ test {
 dependencies {
     sshAntTask 'org.apache.ant:ant-jsch:1.9.2'
     compile "com.sony.ebs.octopus3:octopus3-commons:1.2-SNAPSHOT"
-    compile "com.sony.ebs.octopus3:octopus3-commons-ratpack:1.1-SNAPSHOT"
+    compile "com.sony.ebs.octopus3:octopus3-commons-ratpack:1.2-SNAPSHOT"
     compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1'
     compile 'commons-io:commons-io:2.4'
 

@@ -133,11 +133,11 @@ class RepoService {
     }
 
     /**
-     * Returns FileAttributes,which is decomposed from urn, of the file and checks if it exists
+     * Returns fileAttributes,which is decomposed from urn, of the file and checks if it exists
      * @param urn (eg. urn:flix_sku:global:en_gb:xel1bu) (mandatory)
      * @return FileAttributes of the file
      */
-    FileAttributes getFileAttributes(URN urn) {
+    def getFileAttributes(URN urn) {
         def path = read(urn)
 
         def basicFileAttributes = Files.readAttributes(path, BasicFileAttributes.class)
@@ -145,17 +145,22 @@ class RepoService {
         createFileAttributes(urn, basicFileAttributes, path, true)
     }
 
-    private FileAttributes createFileAttributes(URN urn, BasicFileAttributes basicFileAttributes, Path path, boolean inDepth) {
-        new FileAttributes(
-                urn: urn,
+    private def createFileAttributes(URN urn, BasicFileAttributes basicFileAttributes, Path path, boolean inDepth) {
+        def map = [
+                urn             : urn,
                 lastModifiedTime: getDateAsIsoString(basicFileAttributes?.lastModifiedTime()),
-                creationTime: getDateAsIsoString(basicFileAttributes?.creationTime()),
-                lastAccessTime: getDateAsIsoString(basicFileAttributes?.lastAccessTime()),
-                directory: basicFileAttributes?.directory,
-                regularFile: basicFileAttributes?.regularFile,
-                size: basicFileAttributes?.size(),
-                contentFiles: inDepth ? ((basicFileAttributes?.directory) ? fileList(path) : null) : "Unchecked"
-        )
+                creationTime    : getDateAsIsoString(basicFileAttributes?.creationTime()),
+                lastAccessTime  : getDateAsIsoString(basicFileAttributes?.lastAccessTime()),
+                directory       : basicFileAttributes?.directory,
+                regularFile     : basicFileAttributes?.regularFile
+        ]
+        if (inDepth) {
+            map << [contentFiles: (basicFileAttributes?.directory) ? fileList(path) : null]
+        }
+        if (!basicFileAttributes?.directory) {
+            map << [size: basicFileAttributes?.size()]
+        }
+        map
     }
 
     def fileList(path) {

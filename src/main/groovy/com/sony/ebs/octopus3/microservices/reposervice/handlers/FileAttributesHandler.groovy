@@ -4,7 +4,6 @@ import com.sony.ebs.octopus3.commons.process.ProcessIdImpl
 import com.sony.ebs.octopus3.commons.urn.URN
 import com.sony.ebs.octopus3.commons.urn.URNCreationException
 import com.sony.ebs.octopus3.commons.urn.URNImpl
-import com.sony.ebs.octopus3.microservices.reposervice.business.FileAttributes
 import com.sony.ebs.octopus3.microservices.reposervice.business.RepoService
 import groovy.util.logging.Slf4j
 import org.springframework.beans.factory.annotation.Autowired
@@ -47,7 +46,7 @@ class FileAttributesHandler extends GroovyHandler {
             ).subscribe(([
                     onCompleted: {
                     },
-                    onNext     : { FileAttributes result ->
+                    onNext     : { def result ->
                         activity.info "Request to read with processId: ${params.processId.toString()} OK."
                         response.status(200)
                         render json(status: 200, processId: params.processId, response: "OK", result: result)
@@ -65,7 +64,7 @@ class FileAttributesHandler extends GroovyHandler {
                                 render json([status: 500, processId: params.processId, response: "server error", message: e.message])
                             }
                     }
-            ] as Subscriber<FileAttributes>))
+            ] as Subscriber))
         }
     }
 
