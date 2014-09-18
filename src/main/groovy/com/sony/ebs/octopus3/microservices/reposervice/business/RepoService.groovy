@@ -145,7 +145,7 @@ class RepoService {
         createFileAttributes(urn, basicFileAttributes, path, true)
     }
 
-    private def createFileAttributes(URN urn, BasicFileAttributes basicFileAttributes, Path path, boolean inDepth) {
+    def createFileAttributes(URN urn, BasicFileAttributes basicFileAttributes, Path path, boolean inDepth) {
         def map = [
                 urn             : urn.toString(),
                 lastModifiedTime: getDateAsIsoString(basicFileAttributes?.lastModifiedTime()),
