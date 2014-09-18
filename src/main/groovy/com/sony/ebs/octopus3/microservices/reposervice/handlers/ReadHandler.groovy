@@ -61,7 +61,12 @@ class ReadHandler extends GroovyHandler {
                                 activity.warn "Request to read with processId: ${params.processId.toString()} not found.", e
                                 response.status(404)
                                 render json([status: 404, processId: params.processId, response: "not found", message: e.message])
-                            } else {
+                            } else if(e instanceof UnsupportedOperationException){
+                                activity.warn "Request to read with processId: ${params.processId.toString()} method not allowed.", e
+                                response.status(405)
+                                render json([status: 405, processId: params.processId, response: "method not allowed", message: e.message])
+                            }
+                            else {
                                 activity.warn "Request to read with processId: ${params.processId.toString()} server error."
                                 response.status(500)
                                 render json([status: 500, processId: params.processId, response: "server error", message: e.message])

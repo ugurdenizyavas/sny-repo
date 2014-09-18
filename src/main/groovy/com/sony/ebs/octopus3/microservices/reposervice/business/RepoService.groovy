@@ -56,13 +56,15 @@ class RepoService {
      * @param urn (eg. urn:flix_sku:global:en_gb:xel1bu) (mandatory)
      * @return path of the file
      */
-    def read(URN urn) {
+    def read(URN urn, readFolder = false) {
         def path = Paths.get(basePath + urn.toPath())
         if (Files.notExists(path)) {
             log.debug("File in path ${path} is not found");
             throw new FileNotFoundException("File in path ${urn.toPath()} not found")
+        } else if (!readFolder && Files.readAttributes(path, BasicFileAttributes.class)?.directory) {
+            log.debug("File in path ${path} is a directory");
+            throw new UnsupportedOperationException("File in path ${urn.toPath()} is not a file, it is a folder")
         } else {
-            log.debug("File in path ${path} is read");
             path
         }
     }
@@ -138,7 +140,7 @@ class RepoService {
      * @return FileAttributes of the file
      */
     def getFileAttributes(URN urn) {
-        def path = read(urn)
+        def path = read(urn, true)
 
         def basicFileAttributes = Files.readAttributes(path, BasicFileAttributes.class)
 
