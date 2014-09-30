@@ -109,13 +109,13 @@ class RepoService {
                 log.debug("Destination path ${sourcePath} does not exist, so creating parent folder")
                 Files.createDirectories(destinationParent)
             }
-            Files.copy(sourcePath, destinationPath, StandardCopyOption.REPLACE_EXISTING)
+            FileUtils.copy(sourcePath, destinationPath)
             log.debug("File in path ${sourcePath} is copied to ${destinationPath}")
         }
     }
 
     /**
-     * Copy file/folder from source to destination
+     * Upload file/folder from source to destination
      * @param sourceUrn (eg. urn:flix_sku:global:en_gb) (mandatory)
      * @param destination instance of {@link RepoUploadEnum} (mandatory)
      */
@@ -142,9 +142,7 @@ class RepoService {
     def getFileAttributes(URN urn) {
         def path = read(urn, true)
 
-        def basicFileAttributes = Files.readAttributes(path, BasicFileAttributes.class)
-
-        createFileAttributes(urn, basicFileAttributes, path, true)
+        createFileAttributes(urn, Files.readAttributes(path, BasicFileAttributes.class), path, true)
     }
 
     def createFileAttributes(URN urn, BasicFileAttributes basicFileAttributes, Path path, boolean inDepth) {
