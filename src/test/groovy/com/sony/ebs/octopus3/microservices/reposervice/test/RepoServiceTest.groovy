@@ -75,7 +75,7 @@ class RepoServiceTest {
         repoService.copy(new URNImpl("urn:flix_sku:global:en_gb:xel1ba"), new URNImpl("urn:flix_sku:global:en_gb:dsch300w"))
 
         assertFile "/flix_sku/global/en_gb/xel1ba", "content"
-        assertFile "/flix_sku/global/en_gb/dsch300w:xel1ba", "content"
+        assertFile "/flix_sku/global/en_gb/dsch300w/xel1ba", "content"
     }
 
     @Test(expected = FileNotFoundException.class)
