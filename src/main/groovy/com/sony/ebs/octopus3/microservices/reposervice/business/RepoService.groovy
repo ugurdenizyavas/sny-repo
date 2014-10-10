@@ -6,7 +6,6 @@ import com.sony.ebs.octopus3.commons.urn.URN
 import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.business.upload.AmazonUploadService
 import com.sony.ebs.octopus3.microservices.reposervice.business.upload.RepoUploadEnum
-import com.sun.javaws.exceptions.InvalidArgumentException
 import groovy.util.logging.Slf4j
 import org.joda.time.DateTime
 import org.springframework.beans.factory.annotation.Autowired
@@ -18,6 +17,7 @@ import java.nio.file.Path
 import java.nio.file.Paths
 import java.nio.file.attribute.BasicFileAttributes
 import java.nio.file.attribute.FileTime
+import java.security.InvalidParameterException
 
 /**
  * author: TRYavasU
@@ -174,7 +174,7 @@ class RepoService {
         ISODateUtils.toISODateString(new DateTime(fileTime?.toMillis()))
     }
 
-    def rename(URN urn, String targetName) throws InvalidArgumentException {
+    def rename(URN urn, String targetName) throws InvalidParameterException {
         validateFileName(targetName)
         def fileToRename = read(urn)
         try {
@@ -184,9 +184,10 @@ class RepoService {
         }
     }
 
-    def validateFileName(String fileName) {
+    static def validateFileName(String fileName) throws InvalidParameterException {
         if (fileName.contains("\\") || fileName.contains("/") || fileName.contains("*") || fileName.contains("?") || fileName.contains(":") || fileName.contains("\"") || fileName.contains("<") || fileName.contains(">") || fileName.contains("|") || fileName.contains(" ")) {
-            throw new InvalidArgumentException("Filename: ${fileName} is not valid");
+            log.debug("File cannot be renamed to fileName: ${fileName} because fileName contains an invalid character")
+            throw new InvalidParameterException("Filename: ${fileName} is not valid")
         }
     }
 }
