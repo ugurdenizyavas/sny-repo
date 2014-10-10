@@ -60,6 +60,9 @@ class OpsHandler extends GroovyHandler {
                                     case OperationEnum.COPY:
                                         repoService.copy new URNImpl(parameters.get("source")), new URNImpl(parameters.get("destination"))
                                         break
+                                    case OperationEnum.RENAME:
+                                        repoService.rename new URNImpl(parameters.get("source")), parameters.get("targetName")
+                                        break
                                 }
                             }
                         }

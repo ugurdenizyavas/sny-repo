@@ -4,6 +4,7 @@ import com.sony.ebs.octopus3.commons.date.ISODateUtils
 import com.sony.ebs.octopus3.commons.file.FileUtils
 import com.sony.ebs.octopus3.commons.urn.URNImpl
 import com.sony.ebs.octopus3.microservices.reposervice.business.RepoService
+import com.sun.javaws.exceptions.InvalidArgumentException
 import org.junit.After
 import org.junit.Before
 import org.junit.Test
@@ -109,12 +110,77 @@ class RepoServiceTest {
         assert fileAttributes.lastModifiedTime, "1971-01-01T00:00:00.000Z"
     }
 
-
     @Test(expected = FileNotFoundException.class)
     void readFileAttributesFileNotFound() {
         repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme".getBytes(), ISODateUtils.toISODate("1971-01-01T00:00:00.000Z"))
 
         repoService.getFileAttributes(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"))
+    }
+
+    @Test
+    void renameFile() {
+        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme".getBytes(), null)
+
+        repoService.rename(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "othername")
+
+        assertFile "/flix_sku/global/en_gb/othername", "deneme"
+    }
+
+    @Test(expected = FileNotFoundException.class)
+    void renameFile_FileNotFound() {
+        repoService.write(new URNImpl("urn:flix_sku:global:en_gb:xel1bu"), "deneme".getBytes(), null)
+
+        repoService.rename(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"), "othername")
+    }
+
+    @Test(expected = InvalidArgumentException.class)
+    void renameFile_invalidFileName1() {
+        repoService.rename(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"), "\\othername")
+    }
+
+    @Test(expected = InvalidArgumentException.class)
+    void renameFile_invalidFileName2() {
+        repoService.rename(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"), "/othername")
+    }
+
+    @Test(expected = InvalidArgumentException.class)
+    void renameFile_invalidFileName3() {
+        repoService.rename(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"), "*othername")
+    }
+
+    @Test(expected = InvalidArgumentException.class)
+    void renameFile_invalidFileName4() {
+        repoService.rename(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"), "?othername")
+    }
+
+    @Test(expected = InvalidArgumentException.class)
+    void renameFile_invalidFileName5() {
+        repoService.rename(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"), ":othername")
+    }
+
+    @Test(expected = InvalidArgumentException.class)
+    void renameFile_invalidFileName6() {
+        repoService.rename(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"), "\"othername")
+    }
+
+    @Test(expected = InvalidArgumentException.class)
+    void renameFile_invalidFileName7() {
+        repoService.rename(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"), "<othername")
+    }
+
+    @Test(expected = InvalidArgumentException.class)
+    void renameFile_invalidFileName8() {
+        repoService.rename(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"), ">othername")
+    }
+
+    @Test(expected = InvalidArgumentException.class)
+    void renameFile_invalidFileName9() {
+        repoService.rename(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"), "|othername")
+    }
+
+    @Test(expected = InvalidArgumentException.class)
+    void renameFile_invalidFileName10() {
+        repoService.rename(new URNImpl("urn:flix_sku:global:en_gb:nonexistent"), " othername")
     }
 
     @After

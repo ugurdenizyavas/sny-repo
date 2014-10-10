@@ -15,5 +15,5 @@ class Operation {
 }
 
 enum OperationEnum {
-    ZIP, COPY, UPLOAD, DELETE
+    ZIP, COPY, UPLOAD, DELETE, RENAME
 }
