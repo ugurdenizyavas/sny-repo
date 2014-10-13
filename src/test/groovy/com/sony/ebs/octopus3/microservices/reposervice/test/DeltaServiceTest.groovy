@@ -40,7 +40,7 @@ class DeltaServiceTest {
         def contents = deltaService.delta(new URNImpl("urn:flix_sku:global:en_gb"), ISODateUtils.toISODate("1975-01-01T00:00:00.000Z"), ISODateUtils.toISODate("1985-01-01T00:00:00.000Z"))
         assert contents.size == 1
 
-        assert contents[0] == "urn:flix_sku:global:en_gb:xel1baep"
+        assert contents.contains("urn:flix_sku:global:en_gb:xel1baep")
     }
 
     @Test
@@ -48,8 +48,8 @@ class DeltaServiceTest {
         def contents = deltaService.delta(new URNImpl("urn:flix_sku:global:en_gb"), ISODateUtils.toISODate("1975-01-01T00:00:00.000Z"), null)
         assert contents.size == 2
 
-        assert contents[0] == "urn:flix_sku:global:en_gb:xel1ba54"
-        assert contents[1] == "urn:flix_sku:global:en_gb:xel1baep"
+        assert contents.contains("urn:flix_sku:global:en_gb:xel1ba54")
+        assert contents.contains("urn:flix_sku:global:en_gb:xel1baep")
     }
 
     @Test
@@ -57,8 +57,8 @@ class DeltaServiceTest {
         def contents = deltaService.delta(new URNImpl("urn:flix_sku:global:en_gb"), null, ISODateUtils.toISODate("1985-01-01T00:00:00.000Z"))
         assert contents.size == 2
 
-        assert contents[0] == "urn:flix_sku:global:en_gb:xel1baep"
-        assert contents[1] == "urn:flix_sku:global:en_gb:xel1bu"
+        assert contents.contains("urn:flix_sku:global:en_gb:xel1baep")
+        assert contents.contains("urn:flix_sku:global:en_gb:xel1bu")
     }
 
     @Test
@@ -67,9 +67,9 @@ class DeltaServiceTest {
 
         assert contents.size == 3
 
-        assert contents[0] == "urn:flix_sku:global:en_gb:xel1ba54"
-        assert contents[1] == "urn:flix_sku:global:en_gb:xel1baep"
-        assert contents[2] == "urn:flix_sku:global:en_gb:xel1bu"
+        assert contents.contains("urn:flix_sku:global:en_gb:xel1ba54")
+        assert contents.contains("urn:flix_sku:global:en_gb:xel1baep")
+        assert contents.contains("urn:flix_sku:global:en_gb:xel1bu")
     }
 
     @After

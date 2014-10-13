@@ -16,4 +16,6 @@ class SpringConfig {
         new PropertySourcesPlaceholderConfigurer();
     }
 
+    //TODO: Add amazon upload bean here
+
 }

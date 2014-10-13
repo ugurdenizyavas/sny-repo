@@ -12,18 +12,13 @@ import ratpack.groovy.handling.GroovyContext
 import ratpack.groovy.handling.GroovyHandler
 import rx.Subscriber
 
-import java.nio.file.Path
-
 import static ratpack.jackson.Jackson.json
 import static ratpack.rx.RxRatpack.observe
 
-/**
- * author: TRYavasU
- * date: 22/07/2014
- */
 @Slf4j(value = "activity", category = "activity")
+@Slf4j(value = "log", category = "log")
 @Component
-class ReadHandler extends GroovyHandler {
+class FileAttributesHandler extends GroovyHandler {
 
     @Autowired
     RepoService repoService
@@ -46,14 +41,15 @@ class ReadHandler extends GroovyHandler {
 
             observe(
                     blocking {
-                        repoService.read(params.urn as URN)
+                        repoService.getFileAttributes(params.urn as URN)
                     }
             ).subscribe(([
                     onCompleted: {
                     },
-                    onNext     : { Path result ->
+                    onNext     : { def result ->
                         activity.info "Request to read with processId: ${params.processId.toString()} OK."
-                        response.sendFile context, result
+                        response.status(200)
+                        render json(status: 200, processId: params.processId, response: "OK", result: result)
                     },
                     onError    : {
                         Exception e ->
@@ -61,18 +57,14 @@ class ReadHandler extends GroovyHandler {
                                 activity.warn "Request to read with processId: ${params.processId.toString()} not found.", e
                                 response.status(404)
                                 render json([status: 404, processId: params.processId, response: "not found", message: e.message])
-                            } else if(e instanceof UnsupportedOperationException){
-                                activity.warn "Request to read with processId: ${params.processId.toString()} method not allowed.", e
-                                response.status(405)
-                                render json([status: 405, processId: params.processId, response: "method not allowed", message: e.message])
-                            }
-                            else {
+                            } else {
                                 activity.warn "Request to read with processId: ${params.processId.toString()} server error."
+                                log.error "Error in file attributes:", e
                                 response.status(500)
                                 render json([status: 500, processId: params.processId, response: "server error", message: e.message])
                             }
                     }
-            ] as Subscriber<Path>))
+            ] as Subscriber))
         }
     }
 

@@ -1,0 +1,18 @@
+{"ops": [
+    {
+        "zip": {
+            "source": "urn:flixmedia:global:fr_be"
+        }
+    },
+    {
+        "copy": {
+            "source": "urn:flixmedia:global:fr_be.zip",
+            "destination": "urn:thirdparty:flixmedia:flix_fr_be_20140812_105840.zip"
+        }
+    },
+    {
+        "delete": {
+            "source": "urn:flixmedia:global:fr_be.zip"
+        }
+    }
+]}
