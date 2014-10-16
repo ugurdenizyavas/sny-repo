@@ -83,13 +83,8 @@ class RepoService {
      * @param zipTarget zip file to create/overwrite
      */
     def zip(URN urn) {
-        def path = Paths.get(basePath + urn.toPath())
-        if (Files.notExists(path)) {
-            log.debug("File in path ${path} is not found");
-            throw new FileNotFoundException("File in path ${urn.toPath()} not found")
-        } else {
-            FileUtils.zip(Paths.get(path.toString() + ".zip"), path)
-        }
+        def path = read(urn, true)
+        FileUtils.zip(Paths.get(path.toString() + ".zip"), path)
     }
 
     /**
@@ -98,20 +93,15 @@ class RepoService {
      * @param destinationUrn (eg. urn:flix_sku:global:fr_fr) (mandatory)
      */
     void copy(URN sourceUrn, URN destinationUrn) {
-        def sourcePath = Paths.get(basePath + sourceUrn.toPath())
-        if (Files.notExists(sourcePath)) {
-            log.debug("File in path ${sourcePath} is not found");
-            throw new FileNotFoundException("File in sourcePath ${sourceUrn.toPath()} not found")
-        } else {
-            def destinationPath = Paths.get(basePath + destinationUrn.toPath())
-            def destinationParent = destinationPath.parent
-            if (Files.notExists(destinationParent)) {
-                log.debug("Destination path ${sourcePath} does not exist, so creating parent folder")
-                Files.createDirectories(destinationParent)
-            }
-            FileUtils.copy(sourcePath, destinationPath)
-            log.debug("File in path ${sourcePath} is copied to ${destinationPath}")
+        def sourcePath = read(sourceUrn, true)
+        def destinationPath = Paths.get(basePath + destinationUrn.toPath())
+        def destinationParent = destinationPath.parent
+        if (Files.notExists(destinationParent)) {
+            log.debug("Destination path ${sourcePath} does not exist, so creating parent folder")
+            Files.createDirectories(destinationParent)
         }
+        FileUtils.copy(sourcePath, destinationPath)
+        log.debug("File in path ${sourcePath} is copied to ${destinationPath}")
     }
 
     /**
@@ -120,17 +110,11 @@ class RepoService {
      * @param destination instance of {@link RepoUploadEnum} (mandatory)
      */
     void upload(URN sourceUrn, RepoUploadEnum destination) {
-        def sourcePath = Paths.get(basePath + sourceUrn.toPath())
-        if (Files.notExists(sourcePath)) {
-            log.debug("File in path ${sourcePath} is not found");
-            throw new FileNotFoundException("File in sourcePath ${sourceUrn.toPath()} not found")
+        if (destination == RepoUploadEnum.S3) {
+            amazonUploadService.upload(read(sourceUrn).toFile(), destination)
         } else {
-            if (destination == RepoUploadEnum.S3) {
-                amazonUploadService.upload(sourcePath.toFile(), destination)
-            } else {
-                log.debug("Upload function to ${destination} does not exist");
-                throw new RuntimeException("Upload function to ${destination} does not exist")
-            }
+            log.debug("Upload function to ${destination} does not exist");
+            throw new RuntimeException("Upload function to ${destination} does not exist")
         }
     }
 
