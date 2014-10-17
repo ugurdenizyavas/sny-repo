@@ -124,10 +124,16 @@ dependencies {
     testCompile 'info.cukes:cucumber-junit:1.1.7'
     testCompile 'info.cukes:cucumber-groovy:1.1.7'
 
+    compile 'org.codehaus.groovy.modules.http-builder:http-builder:0.7.1', {
+        exclude module: "commons-logging"
+        exclude module: "xml-apis"
+        exclude module: "groovy"
+    }
     // RATPACK
     testCompile 'org.spockframework:spock-core:0.7-groovy-2.0', {
         exclude module: 'groovy-all'
     }
+
     compile ratpack.dependency("jackson")
     compile ratpack.dependency("rx")
 
