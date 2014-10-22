@@ -185,7 +185,7 @@ class RepoServiceTest {
 
     @After
     void tearDown() {
-        FileUtils.delete(Paths.get(TEST_FOLDER_PATH + "/flix_sku/global/en_gb"))
+        FileUtils.delete(Paths.get(TEST_FOLDER_PATH + "/flix_sku/global/en_gb"), false)
     }
 
     static void assertFile(relativePath, content) {

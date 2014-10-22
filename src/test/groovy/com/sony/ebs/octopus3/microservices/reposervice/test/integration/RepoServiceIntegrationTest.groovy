@@ -46,7 +46,7 @@ class RepoServiceIntegrationTest {
         TEST_FOLDER_PATH = Paths.get(props["storage.root"] as String)
 
         if (Files.exists(TEST_FOLDER_PATH)) {
-            FileUtils.delete(TEST_FOLDER_PATH)
+            FileUtils.delete(TEST_FOLDER_PATH, false)
         }
         TEST_FOLDER_PATH.toFile().mkdirs()
 
@@ -107,7 +107,7 @@ class RepoServiceIntegrationTest {
 
     @After
     void tearDown() {
-        FileUtils.delete(TEST_FOLDER_PATH)
+        FileUtils.delete(TEST_FOLDER_PATH, false)
         aut.stop()
     }
 }
