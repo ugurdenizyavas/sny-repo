@@ -73,8 +73,8 @@ class RepoService {
      * Deletes folder or file for given urn
      * @param urn (eg. urn:flix_sku:global:en_gb) (mandatory)
      */
-    def delete(URN urn) {
-        FileUtils.delete(Paths.get(basePath + urn.toPath()))
+    def delete(URN urn, boolean failIfNoFile = true) {
+        FileUtils.delete(Paths.get(basePath + urn.toPath()), failIfNoFile)
     }
 
     /**

@@ -30,6 +30,7 @@ class DeleteHandler extends GroovyHandler {
             def params = [:]
 
             params.processId = request.queryParams.processId ? new ProcessIdImpl(request.queryParams.processId) : new ProcessIdImpl()
+            params.failIfNofile = request.queryParams.pureDelete != null ? request.queryParams.pureDelete.toBoolean() : true
             activity.info("Request to delete with processId: ${params.processId.toString()}")
             try {
                 params.urn = new URNImpl(pathTokens.urn)
@@ -41,7 +42,7 @@ class DeleteHandler extends GroovyHandler {
 
             observe(
                     blocking {
-                        repoService.delete params.urn
+                        repoService.delete params.urn, params.failIfNofile
                     }
             ) subscribe { result ->
                 activity.info "Request to delete with processId: ${params.processId.toString()} OK."

@@ -12,7 +12,8 @@
     },
     {
         "delete": {
-            "source": "urn:flixmedia:global:fr_be.zip"
+            "source": "urn:flixmedia:global:fr_be.zip",
+            "pureDelete": false
         }
     }
 ]}

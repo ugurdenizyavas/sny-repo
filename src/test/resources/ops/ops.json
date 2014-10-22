@@ -19,7 +19,8 @@
         },
         {
             "delete": {
-                "source": "urn:flix_sku:global:en_gb.zip"
+                "source": "urn:flix_sku:global:en_gb.zip",
+                "pureDelete": true
             }
         }
     ]
