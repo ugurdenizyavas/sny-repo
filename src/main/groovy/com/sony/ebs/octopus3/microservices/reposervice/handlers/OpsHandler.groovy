@@ -52,7 +52,8 @@ class OpsHandler extends GroovyHandler {
                                         repoService.zip new URNImpl(parameters.get("source"))
                                         break
                                     case OperationEnum.DELETE:
-                                        repoService.delete new URNImpl(parameters.get("source"))
+                                        def pureDelete = parameters.get("pureDelete") != null ? parameters.get("pureDelete").toBoolean() : true
+                                        repoService.delete new URNImpl(parameters.get("source")), pureDelete
                                         break
                                     case OperationEnum.UPLOAD:
                                         repoService.upload new URNImpl(parameters.get("source")), RepoUploadEnum.valueOf(parameters.get("destination"))
